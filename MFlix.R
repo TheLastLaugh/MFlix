@@ -20,10 +20,11 @@ db_theatres_collection = mongo(collection="theaters", db="sample_mflix", url=con
 db_users_collection = mongo(collection="users", db="sample_mflix", url=connection_string)
 
 
-#===============================================================================
-#SHOULD THE BELOW CODE BE PUT INTO SECTION 2?
-#SHOULD WE EVER PULL THE SESSIONS DATA? IT HAS NOTHING - JUST IGNORE?
-#===============================================================================
+
+
+
+
+
 
 #CONVERT ALL OF THE DATA (PULLED FROM MONGO) INTO DATAFRAMES FOR USE
 comments = as.data.frame(db_comments_collection$find())
@@ -42,16 +43,9 @@ rm(db_theatres_collection)
 rm(db_users_collection)
 
 
-#(2) DATA TRANSFORMATION
-
-#THE TRANSFORMATIONS FROM PART 3 SHOULD BE MOVED HERE. - EG SUBSET CREATIONS, DATA CLEAN UP, ETC.
-#THIS SHOULD BE SORTED SO IT CAN BE SEEN WHAT SECTION IT IS FOR - EG GRAPH 1.
 
 
-#TO BE HONEST, I'M NOT REALLY SURE ABOUT HOW THIS SECTION IS MEANT TO WORK / WHAT SHOULD BE IN HERE
 
-
-#(3) DATA ANALYSIS
 
 #group by can be used, but is not at all needed for graphing - DISCUSS THIS IN THE REPORT
 #===============================================================================
@@ -191,6 +185,7 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
   xlab("Comments Created per User") +
   ylab("Count of Users")
 
+
 #histogram with 10 bins (better approximates normal / binomial distribution)
 ggplot(data = userCommentCountsSubset, aes(x = count)) +
   geom_histogram(fill = "#FF0000", colour = "#000000", bins = 10) + 
@@ -248,8 +243,11 @@ ggplot() +
 #do another map with the state lines shown?
 
 
-
 # number of theatres per state or post code or somethings
+
+
+
+# Movie Language
 
 
 
@@ -262,6 +260,7 @@ ggplot() +
 # passwords - compare to a hash file (eg: rockyou.txt), and view security perhaps?
 # line graph of total comments over time
 
+
 # Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
 # comment date? (compare to movie release too ?)
 
@@ -271,6 +270,8 @@ ggplot() +
 n_distinct(movies$year)
 
 print(movies %>% group_by(year) %>% count, n = 133)
+
+movies = subset(movies, )
 #potentially compare ratings by year? (like as years go on, how does the percentage of each type of rating change)
 #IF THIS IS DONE, PUT IT NEAR THE OTHER 'RATING' DATA / GRAPHS
 
