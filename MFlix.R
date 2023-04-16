@@ -10,6 +10,9 @@ library(mongolite)
 library(tidyverse)
 library(dplyr)
 
+#SET THE SEED FOR THE FILE TO MAKE 'RANDOM' RESULTS REPRODUCABLE 
+set.seed(0)
+
 #DEFINE (ZEC'S) CONNECTION TO THE 'BILL NYE THE NAZI SPY' DATABASE
 connection_string = 'mongodb+srv://Zec:PP@billnyethenazispy.w5zka2a.mongodb.net/?retryWrites=true&w=majority'
 
@@ -177,13 +180,26 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
 
 
 
-#get a numerical summary of the final graph (as a normal / binomial distribution)
+#TO BE HONEST, IM NOT SURE HOW TO ANALYSE THIS.
 #===============================================================================
+
+#Convert the 'normal' dataset to a matrix for calculations
+userCommentCountsSubset = as.matrix(userCommentCountsSubset)
+
+#5 number summary
 summary(userCommentCountsSubset)
 
-userCommentCountsSubset %>% mutate_all(as.numeric())
+#standard deviation
+print(paste("Standard Deviation: ", sd(userCommentCountsSubset)))
 
-sd(userCommentCountsSubset)
+#create data that follows a normal distribution
+normal_data = rnorm(200)
+
+#QQPlot compares true normal data to a sample set (in this case, the subset), and a
+#straight line indicates the data is normal.
+#This is seen here, hence the distribution of the subset of comments is normal
+qqplot(normal_data, userCommentCountsSubset, 
+       xlab = "Theoretical Quantiles", ylab = "Sample Quantiles")
 #===============================================================================
 
 
