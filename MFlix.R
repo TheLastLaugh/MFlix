@@ -100,14 +100,6 @@ ggplot(data = TVRatings) +
 
 
 #===============================================================================
-#I THINK AS WELL AS GRAPHS, WE NEED TO DO DATA SUMMARIES, STATISTICS, DISTRIBUTIONS, ETC...
-#===============================================================================
-
-#other data to compare could be:
-
-
-# Comments Per User (perhaps top 10 commentors)
-#===============================================================================
 #BELOW, COULD USE EMAIL TO REDUCE THE LIKELIHOOD OF 2 PEOPLE HAVING THE SAME NAME???
 #===============================================================================
 
@@ -119,9 +111,6 @@ ggplot(data = TVRatings) +
 
 #group the user comments by the user's email
 userComments = group_by(comments, email)
-
-
-userComments = group_by(comments, name)
 
 
 #===============================================================================
@@ -163,18 +152,12 @@ ggplot(data = userCommentCounts, aes(x = count)) +
   ylab("Count of Users")
 
 
-userCommentCounts = count(userComments)$n
-
-userCommentRanges = c(sum(userCommentCounts >= 0 & userCommentCounts < 50), sum(userCommentCounts >= 50 & userCommentCounts < 100), sum(userCommentCounts >= 100 & userCommentCounts < 150), sum(userCommentCounts >= 150 & userCommentCounts < 200), sum(userCommentCounts >= 200 & userCommentCounts < 250), sum(userCommentCounts >= 250 & userCommentCounts < 300))
-
-userCommentRanges = data.frame(CommentCountRange = c("0 - 50", "50 - 100", "100 - 150", "150 - 200", "200-250", "250-300"), 
-                               Count = userCommentRanges)
-
-
 
 #summarise(userComments)
 #print(summarise(userComments), n = 234)
 
+#remove all users with less than 5 comments (as outliers). Allows better viewing of the approximate normal distribution.
+userCommentCountsSubset = subset(userCommentCounts, !(count < 5))
 
 
 #histogram with 30 bins
@@ -193,9 +176,12 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
   ylab("Count of Users")
 
 
+
 #get a numerical summary of the final graph (as a normal / binomial distribution)
 #===============================================================================
 summary(userCommentCountsSubset)
+
+userCommentCountsSubset %>% mutate_all(as.numeric())
 
 sd(userCommentCountsSubset)
 #===============================================================================
@@ -206,47 +192,40 @@ sd(userCommentCountsSubset)
 #COULD DO THE SAME THING, BUT COMMENTS PER MOVIE INSTEAD
 #===============================================================================
 
-ggplot(userCommentRanges, aes(x = factor(CommentCountRange, levels = c("0 - 50", "50 - 100", "100 - 150", "150 - 200", "200-250", "250-300")), y = Count)) +
-  geom_bar(stat = "identity", fill = "#FF0000", colour = "#000000") + 
-  ggtitle("Number of User Comments within Specified Ranges") + 
-  xlab("Comments Created per User") +
-  ylab("Count of Users")
 
 
 
+# A map of theatre locations
 
-# A map of theatres
-
-#===============================================================================
-#IMPROVEMENT NEEDED HERE
-#===============================================================================
-
-
+#OBTAIN MAP INFO 
 Map = map_data("world")
 
 USMap = map_data("usa")
 
 
+#CONVERT THE LIST TO A DATAFRAME FOR USE IN GGPLOT
 theatreLocations = data.frame(t(sapply(theatres$location$geo$coordinates, c)))
 
-
+#PLOT THEATRES OVER A MAP OF THE US
 ggplot() + 
   geom_polygon(data = USMap, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
   coord_quickmap() + 
   geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
+#PLOT THE THEATERS OVER A MAP OF THE WORLD 
+#AS THE THEATRES ARE NOT JUST CONTAINED TO THE MAIN US LAND MASS 
 ggplot() + 
   geom_polygon(data = Map, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
   coord_quickmap() + 
   geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
 
-# number of theatres per state or post code or somethings
-
 
 
 # Movie Language
-
+#Remove Null Entries
+#Break down by movie
+#Bar graph
 
 
 
@@ -281,6 +260,8 @@ movies = subset(movies, )
 
 
 #===============================================================================
-#
+
+
+
 #===============================================================================
 
