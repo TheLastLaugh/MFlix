@@ -20,12 +20,6 @@ db_theatres_collection = mongo(collection="theaters", db="sample_mflix", url=con
 db_users_collection = mongo(collection="users", db="sample_mflix", url=connection_string)
 
 
-
-
-
-
-
-
 #CONVERT ALL OF THE DATA (PULLED FROM MONGO) INTO DATAFRAMES FOR USE
 comments = as.data.frame(db_comments_collection$find())
 movies = as.data.frame(db_movies_collection$find())
@@ -46,7 +40,6 @@ rm(db_users_collection)
 
 
 
-
 #group by can be used, but is not at all needed for graphing - DISCUSS THIS IN THE REPORT
 #===============================================================================
 #movieRatings = group_by(movies, rated)
@@ -62,15 +55,15 @@ movieRatings = subset(movies, !(rated %in% c("NOT RATED","Not Rated",NA)))
 
 #graph The Data
 ggplot(data = movieRatings) + 
-  geom_bar(mapping = aes(x = rated), fill = "#FF0000", colour = "#000000") + 
-  ggtitle("Movie Rating Count(s)") + 
-  xlab("Rating")
+  geom_bar(mapping = aes(x = rated)) + 
+  ggtitle("Movie Rating Count(s)")
 
 
 
-#===============================================================================
-#CHECK THAT THESE RATING METHODS ARE THE CORRECT ONES
-#select only the desired rating method(s) (for this graph)
+
+
+
+#select only the desired rating method(s)
 # APPROVED
 # G
 # PASSED
@@ -78,9 +71,10 @@ ggplot(data = movieRatings) +
 # PG-13
 # R
 # UNRATED
+
 primaryRatings = subset(movieRatings, rated %in% c("APPROVED","PASSED","G","PG","PG-13","R","UNRATED"))
 
-#graph The Data of only the selected "primaryRatings"
+#graph The Data
 ggplot(data = primaryRatings) + 
   geom_bar(mapping = aes(x = factor(rated, level = c("G", "PG", "PG-13", "R", "APPROVED", "PASSED", "UNRATED"))), fill = "#FF0000", colour = "#000000") + 
   ggtitle("Movie Rating Count(s)") +
@@ -88,11 +82,14 @@ ggplot(data = primaryRatings) +
 
 
 
-#select only the desired rating method(s) (for this graph)
+
+
+
 # TV-G
 # TV-PG
 # TV-14
 # TV-MA
+
 TVRatings = subset(movieRatings, rated %in% c("TV-G", "TV-PG", "TV-14", "TV-MA"))
 
 #graph The Data
@@ -102,17 +99,19 @@ ggplot(data = TVRatings) +
   xlab("Rating")
 
 
-
 #===============================================================================
 #I THINK AS WELL AS GRAPHS, WE NEED TO DO DATA SUMMARIES, STATISTICS, DISTRIBUTIONS, ETC...
 #===============================================================================
 
+#other data to compare could be:
 
 
-
+# Comments Per User (perhaps top 10 commentors)
 #===============================================================================
 #BELOW, COULD USE EMAIL TO REDUCE THE LIKELIHOOD OF 2 PEOPLE HAVING THE SAME NAME???
 #===============================================================================
+
+
 #PERHAPS :
 
 #dont use name as 2 people could have the same name, but not email. DISCUSS
@@ -122,10 +121,11 @@ ggplot(data = TVRatings) +
 userComments = group_by(comments, email)
 
 
+userComments = group_by(comments, name)
+
 
 #===============================================================================
-#Issues encountered (Maybe we can talk about, IDK)
-#THIS IS NOT A METHOD TO BREAK UP THE DATASET
+#Issues encountered (Maybe can talk about, IDK)
 
 #userCommentRanges = split(userComments, cut(count(userComments)$n, seq(0,300,by=50)))
 #userCommentsRanges = group_by(comments, gr = cut(count(userComments)$n, breaks = seq(0, 200, by = 50)) )
@@ -136,8 +136,7 @@ userCommentCounts = count(userComments)$n
 
 
 #===============================================================================
-#THIS CODE IS NOT NECESSARY WITH GEOM_HISTOGRAM, BUT IS WHEN CREATING GEOM_BAR
-
+#
 #userCommentRanges = c(sum(userCommentCounts >= 0 & userCommentCounts < 50), sum(userCommentCounts >= 50 & userCommentCounts < 100), sum(userCommentCounts >= 100 & userCommentCounts < 150), sum(userCommentCounts >= 150 & userCommentCounts < 200), sum(userCommentCounts >= 200 & userCommentCounts < 250), sum(userCommentCounts >= 250 & userCommentCounts < 300))
 
 #userCommentRanges = data.frame(CommentCountRange = c("0 - 50", "50 - 100", "100 - 150", "150 - 200", "200-250", "250-300"), 
@@ -164,19 +163,19 @@ ggplot(data = userCommentCounts, aes(x = count)) +
   ylab("Count of Users")
 
 
+userCommentCounts = count(userComments)$n
 
+userCommentRanges = c(sum(userCommentCounts >= 0 & userCommentCounts < 50), sum(userCommentCounts >= 50 & userCommentCounts < 100), sum(userCommentCounts >= 100 & userCommentCounts < 150), sum(userCommentCounts >= 150 & userCommentCounts < 200), sum(userCommentCounts >= 200 & userCommentCounts < 250), sum(userCommentCounts >= 250 & userCommentCounts < 300))
 
-#histogram with 30 bins (an outlier is present), but the right side of the data shows a normal / binomial distribution
-ggplot(data = userCommentCounts, aes(x = count)) +
-  geom_histogram(fill = "#FF0000", colour = "#000000") + 
-  ggtitle("Number of User Comments within Specified Ranges") + 
-  xlab("Comments Created per User") +
-  ylab("Count of Users")
+userCommentRanges = data.frame(CommentCountRange = c("0 - 50", "50 - 100", "100 - 150", "150 - 200", "200-250", "250-300"), 
+                               Count = userCommentRanges)
 
 
 
-#remove all users with less than 5 comments (as outliers). Allows better viewing of the approximate normal distribution.
-userCommentCountsSubset = subset(userCommentCounts, !(count < 5))
+#summarise(userComments)
+#print(summarise(userComments), n = 234)
+
+
 
 #histogram with 30 bins
 ggplot(data = userCommentCountsSubset, aes(x = count)) +
@@ -193,6 +192,7 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
   xlab("Comments Created per User") +
   ylab("Count of Users")
 
+
 #get a numerical summary of the final graph (as a normal / binomial distribution)
 #===============================================================================
 summary(userCommentCountsSubset)
@@ -206,17 +206,18 @@ sd(userCommentCountsSubset)
 #COULD DO THE SAME THING, BUT COMMENTS PER MOVIE INSTEAD
 #===============================================================================
 
-
-
-
-
+ggplot(userCommentRanges, aes(x = factor(CommentCountRange, levels = c("0 - 50", "50 - 100", "100 - 150", "150 - 200", "200-250", "250-300")), y = Count)) +
+  geom_bar(stat = "identity", fill = "#FF0000", colour = "#000000") + 
+  ggtitle("Number of User Comments within Specified Ranges") + 
+  xlab("Comments Created per User") +
+  ylab("Count of Users")
 
 
 
 
 # A map of theatres
 
-#==============================================================================
+#===============================================================================
 #IMPROVEMENT NEEDED HERE
 #===============================================================================
 
@@ -240,9 +241,6 @@ ggplot() +
   geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
 
-#do another map with the state lines shown?
-
-
 # number of theatres per state or post code or somethings
 
 
@@ -252,7 +250,6 @@ ggplot() +
 
 
 
-#other data to compare could be:
 
 #not sure if these are as good
 #===============================================================================
