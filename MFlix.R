@@ -16,7 +16,6 @@ connection_string = 'mongodb+srv://Zec:PP@billnyethenazispy.w5zka2a.mongodb.net/
 #COLLECT AND PULL ALL OF THE RELATED DATA FROM THE 'sample_mflix' MONGODB
 db_comments_collection = mongo(collection="comments", db="sample_mflix", url=connection_string)
 db_movies_collection = mongo(collection="movies", db="sample_mflix", url=connection_string)
-db_sessions_collection = mongo(collection="sessions", db="sample_mflix", url=connection_string)
 db_theatres_collection = mongo(collection="theaters", db="sample_mflix", url=connection_string)
 db_users_collection = mongo(collection="users", db="sample_mflix", url=connection_string)
 
@@ -29,7 +28,6 @@ db_users_collection = mongo(collection="users", db="sample_mflix", url=connectio
 #CONVERT ALL OF THE DATA (PULLED FROM MONGO) INTO DATAFRAMES FOR USE
 comments = as.data.frame(db_comments_collection$find())
 movies = as.data.frame(db_movies_collection$find())
-sessions = as.data.frame(db_sessions_collection$find())
 theatres = as.data.frame(db_theatres_collection$find())
 users = as.data.frame(db_users_collection$find())
 
@@ -40,16 +38,8 @@ users = select(users, name, email, password)
 #REMOVE THE OLD (NOW IRRELEVANT) DATA PULLED FROM MONGO
 rm(db_comments_collection)
 rm(db_movies_collection)
-rm(db_sessions_collection)
 rm(db_theatres_collection)
 rm(db_users_collection)
-
-
-#===============================================================================
-#We can probably remove the sessions data completely. there is only one row... kinda useless.
-#Maybe don't even need to import in the first place
-#===============================================================================
-rm(sessions)
 
 
 #(2) DATA TRANSFORMATION
@@ -58,25 +48,23 @@ rm(sessions)
 #THIS SHOULD BE SORTED SO IT CAN BE SEEN WHAT SECTION IT IS FOR - EG GRAPH 1.
 
 
-
+#TO BE HONEST, I'M NOT REALLY SURE ABOUT HOW THIS SECTION IS MEANT TO WORK / WHAT SHOULD BE IN HERE
 
 
 #(3) DATA ANALYSIS
 
-#group by can be used, but is not at all needed for graphing
+#group by can be used, but is not at all needed for graphing - DISCUSS THIS IN THE REPORT
 #===============================================================================
 #movieRatings = group_by(movies, rated)
-#summarise(movieRatings)
+#print(summarise(movieRatings), n = 22)
 #===============================================================================
 
 
-movieRatings = movies
-
-#need to remove invalid entries (based on rating):
+#remove invalid entries (based on rating):
 # NOT RATED
 # Not Rated
 # NA
-movieRatings = subset(movieRatings, !(rated %in% c("NOT RATED","Not Rated",NA)))
+movieRatings = subset(movies, !(rated %in% c("NOT RATED","Not Rated",NA)))
 
 #graph The Data
 ggplot(data = movieRatings) + 
@@ -121,12 +109,6 @@ ggplot(data = TVRatings) +
 
 
 
-
-#Can use the following to check what ratings exist
-#summarise(movieRatings)
-
-
-
 #===============================================================================
 #I THINK AS WELL AS GRAPHS, WE NEED TO DO DATA SUMMARIES, STATISTICS, DISTRIBUTIONS, ETC...
 #===============================================================================
@@ -138,9 +120,12 @@ ggplot(data = TVRatings) +
 #BELOW, COULD USE EMAIL TO REDUCE THE LIKELIHOOD OF 2 PEOPLE HAVING THE SAME NAME???
 #===============================================================================
 #PERHAPS :
-# userComments = group_by(comments, email)
 
-userComments = group_by(comments, name)
+#dont use name as 2 people could have the same name, but not email. DISCUSS
+# userComments = group_by(comments, name)
+
+#group the user comments by the user's email
+userComments = group_by(comments, email)
 
 
 
@@ -152,7 +137,7 @@ userComments = group_by(comments, name)
 #userCommentsRanges = group_by(comments, gr = cut(count(userComments)$n, breaks = seq(0, 200, by = 50)) )
 #===============================================================================
 
-
+#count the number of comments per user. GROUP_BY IS REQUIRED TO ACHEIVE THIS - DISCUSS
 userCommentCounts = count(userComments)$n
 
 
@@ -174,6 +159,7 @@ userCommentCounts = count(userComments)$n
 #
 #===============================================================================
 
+#convert the data to a dataframe to be graphed
 userCommentCounts = data.frame(count = userCommentCounts)
 
 #this histogram shows the same information / data as the bar graph created in the 'bad' code above.
@@ -212,6 +198,14 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
   xlab("Comments Created per User") +
   ylab("Count of Users")
 
+#get a numerical summary of the final graph (as a normal / binomial distribution)
+#===============================================================================
+summary(userCommentCountsSubset)
+
+sd(userCommentCountsSubset)
+#===============================================================================
+
+
 
 #===============================================================================
 #COULD DO THE SAME THING, BUT COMMENTS PER MOVIE INSTEAD
@@ -231,22 +225,25 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
 #IMPROVEMENT NEEDED HERE
 #===============================================================================
 
+
 Map = map_data("world")
 
 USMap = map_data("usa")
 
+
 theatreLocations = data.frame(t(sapply(theatres$location$geo$coordinates, c)))
 
+
+ggplot() + 
+  geom_polygon(data = USMap, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
+  coord_quickmap() + 
+  geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
 ggplot() + 
   geom_polygon(data = Map, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
   coord_quickmap() + 
   geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
-ggplot() + 
-  geom_polygon(data = USMap, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
-  coord_quickmap() + 
-  geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
 #do another map with the state lines shown?
 
@@ -266,12 +263,14 @@ ggplot() +
 # line graph of total comments over time
 
 # Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
+# comment date? (compare to movie release too ?)
+
 
 #number of distinct years that movies (within this database) have been released in.
-#length(db_movies_collection$distinct("year")) is the same as:
+#length(db_movies_collection$distinct("year")) is the same as:'
 n_distinct(movies$year)
 
-movies %>% group_by(year) %>% count
+print(movies %>% group_by(year) %>% count, n = 133)
 #potentially compare ratings by year? (like as years go on, how does the percentage of each type of rating change)
 #IF THIS IS DONE, PUT IT NEAR THE OTHER 'RATING' DATA / GRAPHS
 
