@@ -193,9 +193,12 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
   ylab("Count of Users")
 
 
+
 #get a numerical summary of the final graph (as a normal / binomial distribution)
 #===============================================================================
 summary(userCommentCountsSubset)
+
+mutate_all(userCommentCountSubset, as.numeric())
 
 sd(userCommentCountsSubset)
 #===============================================================================
@@ -215,38 +218,37 @@ ggplot(userCommentRanges, aes(x = factor(CommentCountRange, levels = c("0 - 50",
 
 
 
-# A map of theatres
+# A map of theatre locations
 
-#===============================================================================
-#IMPROVEMENT NEEDED HERE
-#===============================================================================
-
-
+#OBTAIN MAP INFO 
 Map = map_data("world")
 
 USMap = map_data("usa")
 
 
+#CONVERT THE LIST TO A DATAFRAME FOR USE IN GGPLOT
 theatreLocations = data.frame(t(sapply(theatres$location$geo$coordinates, c)))
 
-
+#PLOT THEATRES OVER A MAP OF THE US
 ggplot() + 
   geom_polygon(data = USMap, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
   coord_quickmap() + 
   geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
+#PLOT THE THEATERS OVER A MAP OF THE WORLD 
+#AS THE THEATRES ARE NOT JUST CONTAINED TO THE MAIN US LAND MASS 
 ggplot() + 
   geom_polygon(data = Map, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
   coord_quickmap() + 
   geom_point(theatreLocations, mapping = aes(X1, X2), colour = "#FF0000")
 
 
-# number of theatres per state or post code or somethings
-
 
 
 # Movie Language
-
+#Remove Null Entries
+#Break down by movie
+#Bar graph
 
 
 
@@ -281,6 +283,8 @@ movies = subset(movies, )
 
 
 #===============================================================================
-#
+
+
+
 #===============================================================================
 
