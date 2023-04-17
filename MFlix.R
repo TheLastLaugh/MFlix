@@ -167,6 +167,8 @@ ggplot(data = userCommentCounts, aes(x = count)) +
   ggtitle("Number of User Comments within Specified Ranges")
 
 
+#remove all users with less than 5 comments (as outliers). Allows better viewing of the approximate normal distribution.
+userCommentCountsSubset = subset(userCommentCounts, !(count < 5))
 
 #CREATE A SUBSET OF THE DATA THAT REMOVES THE OUTLIERS WHERE THE COUNT IS LESS THAN 5
 userCommentCountsSubset = subset(userCommentCounts, !(count < 5))
@@ -221,15 +223,12 @@ summary(userCommentCountsSubset)
 #STANDARD DEVIATION
 print(paste("Standard Deviation: ", sd(userCommentCountsSubset)))
 
+
 #CLEANUP VARIABLES
 rm(userComments)
 rm(userCommentCounts)
 rm(userCommentCountsSubset)
 rm(normal_data)
-
-
-
-
 
 
 
@@ -311,6 +310,7 @@ ggplot(data = head(movieLanguages, 5)) +
   xlab("Languages") + 
   ylab("Count") + 
   ggtitle("Count of Movies Utilising Each Language (Top 5 Languages)")
+
 
 #CLEANUP VARIABLES
 rm(movieLanguages)
