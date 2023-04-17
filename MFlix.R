@@ -4,11 +4,13 @@
 #install.packages("mongolite")
 #install.packages("tidyverse")
 #install.packages("dplyr")
+#install.packages("data.table")
 
 #CALL REQUIRED LIBRARIES
 library(mongolite)
 library(tidyverse)
 library(dplyr)
+library(data.table)
 
 #SET THE SEED FOR THE FILE TO MAKE 'RANDOM' RESULTS REPRODUCABLE 
 set.seed(0)
@@ -39,7 +41,7 @@ rm(db_movies_collection)
 rm(db_theatres_collection)
 rm(db_users_collection)
 
-
+rm(connection_string)
 
 
 
@@ -159,6 +161,12 @@ ggplot(data = userCommentCounts, aes(x = count)) +
   xlab("Comments Created per User") +
   ylab("Count of Users")
 
+#histogram with 30 bins
+ggplot(data = userCommentCounts, aes(x = count)) +
+  geom_histogram(fill = "#FF0000", colour = "#000000", bins = 30) + 
+  ggtitle("Number of User Comments within Specified Ranges") + 
+  xlab("Comments Created per User") +
+  ylab("Count of Users")
 
 
 #summarise(userComments)
@@ -188,6 +196,15 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
 #TO BE HONEST, IM NOT SURE HOW TO ANALYSE THIS.
 #===============================================================================
 
+#QQPlot compares true normal data to a sample set (in this case, the subset), and a
+#straight line indicates the data is normal.
+#This is seen here, hence the distribution of the subset of comments is normal
+ggplot(data = (userCommentCountsSubset), aes(sample = count)) + 
+  geom_qq() + geom_qq_line() + 
+  xlab("Theoretical Normal Distribution") + 
+  ylab("Sample Data") +
+  ggtitle("QQPlot of subset of Comment Count Distribution")
+
 #Convert the 'normal' dataset to a matrix for calculations
 userCommentCountsSubset = as.matrix(userCommentCountsSubset)
 
@@ -197,14 +214,6 @@ summary(userCommentCountsSubset)
 #standard deviation
 print(paste("Standard Deviation: ", sd(userCommentCountsSubset)))
 
-#create data that follows a normal distribution
-normal_data = rnorm(200)
-
-#QQPlot compares true normal data to a sample set (in this case, the subset), and a
-#straight line indicates the data is normal.
-#This is seen here, hence the distribution of the subset of comments is normal
-qqplot(normal_data, userCommentCountsSubset, 
-       xlab = "Theoretical Quantiles", ylab = "Sample Quantiles")
 #===============================================================================
 
 
@@ -215,14 +224,10 @@ rm(userCommentCountsSubset)
 rm(normal_data)
 
 
-#===============================================================================
-#COULD DO THE SAME THING, BUT COMMENTS PER MOVIE INSTEAD
-#===============================================================================
 
 
 
 
-# A map of theatre locations
 
 #OBTAIN MAP INFO 
 Map = map_data("world")
@@ -255,6 +260,8 @@ rm(USMap)
 rm(theatreLocations)
 
 
+
+
 # Movie Language
 
 #SELECT RELEVANT DATA COLUMNS
@@ -266,19 +273,22 @@ movieLanguages = subset(movieLanguages, !(languages %in% "NULL"))
 #ENTRIES WITH MORE THAN ONE LANGUAGE (CONTAINED WITHIN A LIST) ARE REMOVED FROM THE CONTAINED LIST(S), AND ALL LANGUAGES ARE PUT INTO SEPARATE ENTREIS
 movieLanguages = data.frame(languages = unlist(movieLanguages$languages))
 
-
+#GROUP MOVIES BASED ON LANGUAGE
 movieLanguages = group_by(movieLanguages, languages)
 
 
-
+#CREATE A DATAFRAME CONTAINING THE LANGUAGES AND COUNT OF OCCURENCES WITHIN MOVIES
 movieLanguages = data.frame(languages = summarise(movieLanguages),
                             count = count(movieLanguages)$n)
 
-#OR THE FOLLOWING CODE CAN BE USED (But it doesnt really do it how is desired):
+#OR THE FOLLOWING CODE CAN BE USED (But it doesnt really do it how is desired) - DISCUSS
 # count(movies, languages)
 
 #ARRANGE MOVIES IN DESCENDING ORDER ('-' INDICATES THE DESCENDING AS DEFAULT IS ASCENDING)
 movieLanguages = arrange(movieLanguages, -count)
+
+#LIST ALL MOVIES AND THEIR LANGUAGE
+movieLanguages
 
 #GRAPH ALL MOVIES
 ggplot(data = movieLanguages) +
@@ -299,10 +309,87 @@ ggplot(data = head(movieLanguages, 5)) +
   geom_bar(stat = 'identity', mapping = aes(x = languages, y = count), fill = "#FF0000", colour = "#000000") +
   ggtitle("Count of Movies Utilising Each Language (Top 5 Languages)")
 
-
-
 #CLEANUP VARIABLES
 rm(movieLanguages)
+
+
+
+
+# Movie type - ZEC
+
+
+movieType = select(movies, type, year)
+
+
+movieType = group_by(movies, type)
+
+
+
+ggplot(data = movieType) +
+  geom_bar(mapping = aes(x = type), fill = "#FF0000", colour = "#000000") +
+  xlab("Type") +
+  ylab("Count") +
+  ggtitle("Count of Movie Type vs Series Type")
+
+
+
+#THIS IS A BAD WAY TO DO THIS - THERE IS A FAR BETTER WAY TO DO THIS BELOW
+#===============================================================================
+
+#CREATE DATAFRAME FOR MOVIES WITH TYPE "movie"
+#movieTypeMovie = subset(movieType, type == "movie")
+
+#ARRANGE BY ASCENDING YEAR
+#movieTypeMovie = arrange(movieTypeMovie, year)
+
+#CUMULATIVE COUNT OF MOVIES WITH TYPE "movie"
+#movieTypeMovie$cum = rowid(movieTypeMovie$type)
+
+
+
+#CREATE DATAFRAME FOR MOVIES WITH TYPE "series"
+#movieTypeSeries = subset(movieType, type == "series")
+
+#ARRANGE BY ASCENDING YEAR
+#movieTypeSeries = arrange(movieTypeSeries, year)
+
+#CUMULATIVE COUNT OF MOVIES WITH TYPE "series"
+#movieTypeSeries$cum = rowid(movieTypeSeries$type)
+
+#CONNECT BOTH DATAFRAMES BACK TOGETHER
+#movieType = rbind(movieTypeMovie, movieTypeSeries)
+#===============================================================================
+
+#ARRANGE DATA IN ASCENDING YEAR
+movieType = arrange(movieType, year)
+
+#CREATE A COUNT BASED ON THE TYPE OF MOVIE - MORE EFFICIENT THAN THE CODE ABOVE
+movieType = mutate(movieType, count = rowid(type))
+
+#GREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
+ggplot(data = movieType, aes(x = as.numeric(year), y = count, group = type, colour = type)) +
+  geom_point() + 
+  geom_smooth() +
+  scale_x_continuous(name = "Year", limits = NULL, n.breaks = 10) + 
+  ylab("Cumulative Number of Movies") +
+  ggtitle("Cumulative Movies Grouped by 'type'")
+
+
+
+
+rm(movieType)
+#rm(movieTypeMovie)
+#rm(movieTypeSeries)
+#perhaps movie type over time (Graph the cumulative sum over time)
+
+
+# Movie Genres - ZEC
+
+
+
+
+
+
 
 
 
@@ -316,10 +403,7 @@ rm(movieLanguages)
 # Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
 # comment date? (compare to movie release too ?)
 
-# Movie Genres
-# Movie type
 # Movie country
-
 
 #number of distinct years that movies (within this database) have been released in.
 #length(db_movies_collection$distinct("year")) is the same as:'
