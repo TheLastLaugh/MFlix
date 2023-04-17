@@ -45,69 +45,6 @@ rm(connection_string)
 
 
 
-#group by can be used, but is not at all needed for graphing - DISCUSS THIS IN THE REPORT
-#===============================================================================
-#movieRatings = group_by(movies, rated)
-#print(summarise(movieRatings), n = 22)
-#===============================================================================
-
-
-#REMOVE INVALID ENTRIES (BASED ON RATING)
-# NOT RATED
-# Not Rated
-# NA
-movieRatings = subset(movies, !(rated %in% c("NOT RATED","Not Rated",NA)))
-
-#GENERATE A BAR GRAPH OF THE DATASET
-ggplot(data = movieRatings) + 
-  geom_bar(mapping = aes(x = rated), fill = "#FF0000", colour = "#000000") +
-  xlab("Rating") + 
-  ylab("Count") +
-  ggtitle("Movie Rating Count(s)")
-
-
-
-#SELECT ONLY THE DESIRED RATING METHOD(S) - CREATE A SUBSET OF THE DATA
-# APPROVED
-# G
-# PASSED
-# PG
-# PG-13
-# R
-# UNRATED
-primaryRatings = subset(movieRatings, rated %in% c("APPROVED","PASSED","G","PG","PG-13","R","UNRATED"))
-
-#GENERATE A BAR GRAPH OF THE SUBSET OF THE DATA
-ggplot(data = primaryRatings) + 
-  geom_bar(mapping = aes(x = factor(rated, level = c("G", "PG", "PG-13", "R", "APPROVED", "PASSED", "UNRATED"))), fill = "#FF0000", colour = "#000000") + 
-  xlab("Rating") + 
-  ylab("Count") + 
-  ggtitle("Movie Rating Count(s)")
-  
-
-
-#SELECT ONLY THE DESIRED RATING METHOD(S) - CREATE A SUBSET OF THE DATA
-# TV-G
-# TV-PG
-# TV-14
-# TV-MA
-TVRatings = subset(movieRatings, rated %in% c("TV-G", "TV-PG", "TV-14", "TV-MA"))
-
-#GENERATE A BAR GRAPH OF THE SUBSET OF THE DATA
-ggplot(data = TVRatings) + 
-  geom_bar(mapping = aes(x = factor(rated, level = c("TV-G", "TV-PG", "TV-14", "TV-MA"))), fill = "#FF0000", colour = "#000000") + 
-  xlab("Rating") + 
-  ylab("Count") + 
-  ggtitle("Movie TV-Rating Count(s)")
-
-
-#CLEANUP VARIABLES
-rm(movieRatings)
-rm(primaryRatings)
-rm(TVRatings)
-
-
-
 
 #dont use name as 2 people could have the same name, but not email. DISCUSS
 
@@ -262,6 +199,68 @@ rm(theatreLocations)
 
 
 
+#group by can be used, but is not at all needed for graphing - DISCUSS THIS IN THE REPORT
+#===============================================================================
+#movieRatings = group_by(movies, rated)
+#print(summarise(movieRatings), n = 22)
+#===============================================================================
+
+
+#REMOVE INVALID ENTRIES (BASED ON RATING)
+# NOT RATED
+# Not Rated
+# NA
+movieRatings = subset(movies, !(rated %in% c("NOT RATED","Not Rated",NA)))
+
+#GENERATE A BAR GRAPH OF THE DATASET
+ggplot(data = movieRatings) + 
+  geom_bar(mapping = aes(x = rated), fill = "#FF0000", colour = "#000000") +
+  xlab("Rating") + 
+  ylab("Count") +
+  ggtitle("Movie Rating Count(s)")
+
+
+
+#SELECT ONLY THE DESIRED RATING METHOD(S) - CREATE A SUBSET OF THE DATA
+# APPROVED
+# G
+# PASSED
+# PG
+# PG-13
+# R
+# UNRATED
+primaryRatings = subset(movieRatings, rated %in% c("APPROVED","PASSED","G","PG","PG-13","R","UNRATED"))
+
+#GENERATE A BAR GRAPH OF THE SUBSET OF THE DATA
+ggplot(data = primaryRatings) + 
+  geom_bar(mapping = aes(x = factor(rated, level = c("G", "PG", "PG-13", "R", "APPROVED", "PASSED", "UNRATED"))), fill = "#FF0000", colour = "#000000") + 
+  xlab("Rating") + 
+  ylab("Count") + 
+  ggtitle("Movie Rating Count(s)")
+
+
+
+#SELECT ONLY THE DESIRED RATING METHOD(S) - CREATE A SUBSET OF THE DATA
+# TV-G
+# TV-PG
+# TV-14
+# TV-MA
+TVRatings = subset(movieRatings, rated %in% c("TV-G", "TV-PG", "TV-14", "TV-MA"))
+
+#GENERATE A BAR GRAPH OF THE SUBSET OF THE DATA
+ggplot(data = TVRatings) + 
+  geom_bar(mapping = aes(x = factor(rated, level = c("TV-G", "TV-PG", "TV-14", "TV-MA"))), fill = "#FF0000", colour = "#000000") + 
+  xlab("Rating") + 
+  ylab("Count") + 
+  ggtitle("Movie TV-Rating Count(s)")
+
+
+#CLEANUP VARIABLES
+rm(movieRatings)
+rm(primaryRatings)
+rm(TVRatings)
+
+
 # Movie Language
 
 #SELECT RELEVANT DATA COLUMNS
@@ -315,7 +314,7 @@ rm(movieLanguages)
 
 
 
-# Movie type - ZEC
+# Movie type
 
 #SELECT RELEVANT DATA
 movieType = select(movies, type, year)
@@ -374,16 +373,12 @@ ggplot(data = movieType, aes(x = as.numeric(year), y = count, group = type, colo
   ggtitle("Cumulative Movies Grouped by 'type'")
 
 
-
 #CLEANUP VARIABLES
 rm(movieType)
 
 #rm(movieTypeMovie)
 #rm(movieTypeSeries)
 #perhaps movie type over time (Graph the cumulative sum over time)
-
-
-# Movie Genres 
 
 #COLLECT THE RELEVANT DATA
 movieGenres = select(movies, genres)
