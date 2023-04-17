@@ -12,9 +12,6 @@ library(tidyverse)
 library(dplyr)
 library(data.table)
 
-#SET THE SEED FOR THE FILE TO MAKE 'RANDOM' RESULTS REPRODUCABLE 
-set.seed(0)
-
 #DEFINE (ZEC'S) CONNECTION TO THE 'BILL NYE THE NAZI SPY' DATABASE
 connection_string = 'mongodb+srv://Zec:PP@billnyethenazispy.w5zka2a.mongodb.net/?retryWrites=true&w=majority'
 
@@ -104,8 +101,18 @@ ggplot(data = userCommentCounts, aes(x = count)) +
   ggtitle("Number of User Comments within Specified Ranges")
 
 
-#CREATE A SUBSET OF THE DATA THAT REMOVES THE OUTLIERS WHERE THE COUNT IS LESS THAN 5
-userCommentCountsSubset = subset(userCommentCounts, !(count < 5))
+#CREATE A SUBSET OF THE DATA THAT REMOVES THE OUTLIERS
+Q1 = quantile(userCommentCounts$count, 0.25)
+Q3 = quantile(userCommentCounts$count, 0.75)
+IQR = IQR(userCommentCounts$count)
+
+userCommentCountsSubset = subset(userCommentCounts, (userCommentCounts > ((Q1) - 1.5 * (IQR))) &
+                                   (userCommentCounts < ((Q3) + 1.5 * (IQR))))
+
+rm(Q1)
+rm(Q3)
+rm(IQR)
+
 
 #30 BIN HISTOGRAM OF THE SUBSET OF DATA
 ggplot(data = userCommentCountsSubset, aes(x = count)) +
@@ -331,6 +338,7 @@ ggplot(data = movieType) +
 
 
 
+
 #THIS IS A BAD WAY TO DO THIS - THERE IS A FAR BETTER WAY TO DO THIS BELOW
 #===============================================================================
 
@@ -401,7 +409,7 @@ ggplot(data = movieGenres) +
   geom_bar(stat = 'identity', mapping = aes(x = genres, y = count), fill = "#FF0000", colour = "#000000") + 
   xlab("Genres") + 
   ylab("Count") + 
-  theme(axis.text.x =  element_text(angle = 315)) +
+  theme(axis.text.x =  element_text(angle = 270)) +
   ggtitle("Genre Occurence Count")
 
 #BAR GRAPH OF TOP 5 GENRES
@@ -414,6 +422,10 @@ ggplot(data = head(movieGenres, 5)) +
 
 #CLEANUP VARIABLES
 rm(movieGenres)
+
+#===============================================================================
+#CODE TO THIS POINT IS WRITTEN BY ZEC
+#===============================================================================
 
 
 
@@ -452,8 +464,6 @@ rm(movieGenres)
 
 
 #(4) DATA MODELLING 
-
-
 #===============================================================================
 
 
