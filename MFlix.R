@@ -43,48 +43,19 @@ rm(connection_string)
 
 
 
-#dont use name as 2 people could have the same name, but not email. DISCUSS
-
 #GROUP THE COMMENTS BY THE USER'S EMAIL
 userComments = group_by(comments, email)
 
 
-#===============================================================================
-#Issues encountered (Maybe can talk about, IDK)
-#REMOVE EVENTUALLY
-
-#userCommentRanges = split(userComments, cut(count(userComments)$n, seq(0,300,by=50)))
-#userCommentsRanges = group_by(comments, gr = cut(count(userComments)$n, breaks = seq(0, 200, by = 50)) )
-#===============================================================================
-
-
-#COUNT THE NUMBER OF COMMENTS PER USER
-#GROUP_BY IS REQUIRED TO ACHIEVE THIS - DISCUSS ================================
+#COUNT THE NUMBER OF COMMENTS PER USER - GROUP_BY IS REQUIRED TO ACHIEVE THIS
 userCommentCounts = count(userComments)$n
 
-
-#===============================================================================
-#REMOVE EVENTUALLY
-#userCommentRanges = c(sum(userCommentCounts >= 0 & userCommentCounts < 50), sum(userCommentCounts >= 50 & userCommentCounts < 100), sum(userCommentCounts >= 100 & userCommentCounts < 150), sum(userCommentCounts >= 150 & userCommentCounts < 200), sum(userCommentCounts >= 200 & userCommentCounts < 250), sum(userCommentCounts >= 250 & userCommentCounts < 300))
-
-#userCommentRanges = data.frame(CommentCountRange = c("0 - 50", "50 - 100", "100 - 150", "150 - 200", "200-250", "250-300"), 
-#                               Count = userCommentRanges)
-
-#NOW OUTDATED CODE
-#ggplot(userCommentRanges, aes(x = factor(CommentCountRange, levels = c("0 - 50", "50 - 100", "100 - 150", "150 - 200", "200-250", "250-300")), y = Count)) +
-#  geom_bar(stat = "identity", fill = "#FF0000", colour = "#000000") + 
-#  ggtitle("Number of User Comments within Specified Ranges") + 
-#  xlab("Comments Created per User") +
-#  ylab("Count of Users")
-
-#
-#===============================================================================
 
 #CONVERT THE DATA TO A DATARAME TO BE GRAPHED
 userCommentCounts = data.frame(count = userCommentCounts)
 
 #USING HISTOGRAMS AUTOMATICALLY SEPARATED THE DATA INTO BINS
-#THIS MAKES THE MANUAL METHOD OF DOING THIS UNNECESSARY
+#THIS MAKES THE MANUAL METHOD OF PUTTING DATA INTO BINS UNNECESSARY
 
 #6 BIN HISTOGRAM OF ENTIRE DATASET
 ggplot(data = userCommentCounts, aes(x = count)) +
@@ -108,7 +79,7 @@ IQR = IQR(userCommentCounts$count)
 
 userCommentCountsSubset = subset(userCommentCounts, (userCommentCounts > ((Q1) - 1.5 * (IQR))) &
                                    (userCommentCounts < ((Q3) + 1.5 * (IQR))))
-
+#VARIABLE CLEANUP
 rm(Q1)
 rm(Q3)
 rm(IQR)
@@ -155,15 +126,6 @@ ggplot(data = userCommentCountsSubset) +
   ggtitle("Box Plot showing Number of Comments Per User (Outliers Removed)") + 
   coord_flip()
 
-#CONVERT THE DATA SUBSET TO A MATRIX TO PERFORM SOME CALCULATIONS
-userCommentCountsSubset = as.matrix(userCommentCountsSubset)
-
-#5_NUMBER SUMMARY
-summary(userCommentCountsSubset)
-
-#STANDARD DEVIATION
-print(paste("Standard Deviation: ", sd(userCommentCountsSubset)))
-
 
 #CLEANUP VARIABLES
 rm(userComments)
@@ -173,6 +135,9 @@ rm(normal_data)
 
 
 
+
+#Theatre Maps
+
 #OBTAIN MAP INFO 
 Map = map_data("world")
 
@@ -180,7 +145,7 @@ USMap = map_data("usa")
 
 
 #CONVERT THE LIST TO A DATAFRAME FOR USE IN GGPLOT
-#THE INITIAL FORMATTING OF THE COORDINATES WAS NOT FRIENDLY TO CONVERT
+#THE COORDINATES FROM MONGO IS A TABLE OF LISTS - NOT FRIENDLY TO CONVERT
 theatreLocations = data.frame(t(sapply(theatres$location$geo$coordinates, c)))
 
 #PLOT THEATRES OVER A MAP OF THE US
@@ -206,12 +171,7 @@ rm(theatreLocations)
 
 
 
-#group by can be used, but is not at all needed for graphing - DISCUSS THIS IN THE REPORT
-#===============================================================================
-#movieRatings = group_by(movies, rated)
-#print(summarise(movieRatings), n = 22)
-#===============================================================================
-
+# Movie Rating
 
 #REMOVE INVALID ENTRIES (BASED ON RATING)
 # NOT RATED
@@ -224,6 +184,7 @@ ggplot(data = movieRatings) +
   geom_bar(mapping = aes(x = rated), fill = "#FF0000", colour = "#000000") +
   xlab("Rating") + 
   ylab("Count") +
+  theme(axis.text.x =  element_text(angle = 315)) +
   ggtitle("Movie Rating Count(s)")
 
 
@@ -266,6 +227,8 @@ ggplot(data = TVRatings) +
 rm(movieRatings)
 rm(primaryRatings)
 rm(TVRatings)
+
+
 
 
 # Movie Language
@@ -321,7 +284,7 @@ rm(movieLanguages)
 
 
 
-# Movie type
+# Movie Type
 
 #SELECT RELEVANT DATA
 movieType = select(movies, type, year)
@@ -336,35 +299,6 @@ ggplot(data = movieType) +
   ylab("Count") +
   ggtitle("Count of Movie Type vs Series Type")
 
-
-
-
-#THIS IS A BAD WAY TO DO THIS - THERE IS A FAR BETTER WAY TO DO THIS BELOW
-#===============================================================================
-
-#CREATE DATAFRAME FOR MOVIES WITH TYPE "movie"
-#movieTypeMovie = subset(movieType, type == "movie")
-
-#ARRANGE BY ASCENDING YEAR
-#movieTypeMovie = arrange(movieTypeMovie, year)
-
-#CUMULATIVE COUNT OF MOVIES WITH TYPE "movie"
-#movieTypeMovie$cum = rowid(movieTypeMovie$type)
-
-
-
-#CREATE DATAFRAME FOR MOVIES WITH TYPE "series"
-#movieTypeSeries = subset(movieType, type == "series")
-
-#ARRANGE BY ASCENDING YEAR
-#movieTypeSeries = arrange(movieTypeSeries, year)
-
-#CUMULATIVE COUNT OF MOVIES WITH TYPE "series"
-#movieTypeSeries$cum = rowid(movieTypeSeries$type)
-
-#CONNECT BOTH DATAFRAMES BACK TOGETHER
-#movieType = rbind(movieTypeMovie, movieTypeSeries)
-#===============================================================================
 
 #ARRANGE DATA IN ASCENDING YEAR
 movieType = arrange(movieType, year)
@@ -384,9 +318,10 @@ ggplot(data = movieType, aes(x = as.numeric(year), y = count, group = type, colo
 #CLEANUP VARIABLES
 rm(movieType)
 
-#rm(movieTypeMovie)
-#rm(movieTypeSeries)
-#perhaps movie type over time (Graph the cumulative sum over time)
+
+
+
+# Movie Genre
 
 #COLLECT THE RELEVANT DATA
 movieGenres = select(movies, genres)
