@@ -58,7 +58,7 @@ movieRatings = subset(movies, !(rated %in% c("NOT RATED","Not Rated",NA)))
 
 #graph The Data
 ggplot(data = movieRatings) + 
-  geom_bar(mapping = aes(x = rated)) + 
+  geom_bar(mapping = aes(x = rated), fill = "#FF0000", colour = "#000000") + 
   ggtitle("Movie Rating Count(s)")
 
 
@@ -100,6 +100,11 @@ ggplot(data = TVRatings) +
   geom_bar(mapping = aes(x = factor(rated, level = c("TV-G", "TV-PG", "TV-14", "TV-MA"))), fill = "#FF0000", colour = "#000000") + 
   ggtitle("Movie TV-Rating Count(s)") + 
   xlab("Rating")
+
+#CLEANUP VARIABLES
+rm(movieRatings)
+rm(primaryRatings)
+rm(TVRatings)
 
 
 #===============================================================================
@@ -203,6 +208,12 @@ qqplot(normal_data, userCommentCountsSubset,
 #===============================================================================
 
 
+#CLEANUP VARIABLES
+rm(userComments)
+rm(userCommentCounts)
+rm(userCommentCountsSubset)
+rm(normal_data)
+
 
 #===============================================================================
 #COULD DO THE SAME THING, BUT COMMENTS PER MOVIE INSTEAD
@@ -220,6 +231,7 @@ USMap = map_data("usa")
 
 
 #CONVERT THE LIST TO A DATAFRAME FOR USE IN GGPLOT
+#THE INITIAL FORMATTING OF THE COORDINATES WAS NOT FRIENDLY TO CONVERT
 theatreLocations = data.frame(t(sapply(theatres$location$geo$coordinates, c)))
 
 #PLOT THEATRES OVER A MAP OF THE US
@@ -237,12 +249,60 @@ ggplot() +
 
 
 
+#CLEANUP VARIABLES
+rm(Map)
+rm(USMap)
+rm(theatreLocations)
+
 
 # Movie Language
-#Remove Null Entries
-#Break down by movie
-#Bar graph
 
+#SELECT RELEVANT DATA COLUMNS
+movieLanguages = select(movies, languages)
+
+#REMOVE NULL ENTRIES
+movieLanguages = subset(movieLanguages, !(languages %in% "NULL"))
+
+#ENTRIES WITH MORE THAN ONE LANGUAGE (CONTAINED WITHIN A LIST) ARE REMOVED FROM THE CONTAINED LIST(S), AND ALL LANGUAGES ARE PUT INTO SEPARATE ENTREIS
+movieLanguages = data.frame(languages = unlist(movieLanguages$languages))
+
+
+movieLanguages = group_by(movieLanguages, languages)
+
+
+
+movieLanguages = data.frame(languages = summarise(movieLanguages),
+                            count = count(movieLanguages)$n)
+
+#OR THE FOLLOWING CODE CAN BE USED (But it doesnt really do it how is desired):
+# count(movies, languages)
+
+#ARRANGE MOVIES IN DESCENDING ORDER ('-' INDICATES THE DESCENDING AS DEFAULT IS ASCENDING)
+movieLanguages = arrange(movieLanguages, -count)
+
+#GRAPH ALL MOVIES
+ggplot(data = movieLanguages) +
+  geom_bar(stat = 'identity', mapping = aes(x = languages, y = count), fill = "#FF0000", colour = "#000000") +
+  ggtitle("Count of Movies Utilising Each Language")
+
+
+#ONLY CHOOSE LANGUAGES WITH A COUNT GREATER THAN 500
+movieLanguages = subset(movieLanguages, count > 500)
+
+ggplot(data = movieLanguages) +
+  geom_bar(stat = 'identity', mapping = aes(x = languages, y = count), fill = "#FF0000", colour = "#000000") +
+  ggtitle("Language count (Greater than 500) for the Sample Movies")
+
+
+#ONLY GRAPH THE TOP 5 LANGUAGES
+ggplot(data = head(movieLanguages, 5)) +
+  geom_bar(stat = 'identity', mapping = aes(x = languages, y = count), fill = "#FF0000", colour = "#000000") +
+  ggtitle("Count of Movies Utilising Each Language (Top 5 Languages)")
+
+
+
+#CLEANUP VARIABLES
+rm(movieLanguages)
 
 
 
@@ -256,14 +316,22 @@ ggplot() +
 # Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
 # comment date? (compare to movie release too ?)
 
+# Movie Genres
+# Movie type
+# Movie country
+
 
 #number of distinct years that movies (within this database) have been released in.
 #length(db_movies_collection$distinct("year")) is the same as:'
-n_distinct(movies$year)
 
-print(movies %>% group_by(year) %>% count, n = 133)
 
-movies = subset(movies, )
+#n_distinct(movies$year)
+
+#print(movies %>% group_by(year) %>% count, n = 133)
+
+#movies = subset(movies, )
+
+
 #potentially compare ratings by year? (like as years go on, how does the percentage of each type of rating change)
 #IF THIS IS DONE, PUT IT NEAR THE OTHER 'RATING' DATA / GRAPHS
 
