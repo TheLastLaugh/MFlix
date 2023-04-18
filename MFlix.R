@@ -4,6 +4,7 @@
 #install.packages("mongolite")
 #install.packages("tidyverse")
 #install.packages("dplyr")
+#install.packages("scales")
 #install.packages("data.table")
 
 #CALL REQUIRED LIBRARIES
@@ -11,6 +12,7 @@ library(mongolite)
 library(tidyverse)
 library(dplyr)
 library(data.table)
+library(scales)
 
 #DEFINE (ZEC'S) CONNECTION TO THE 'BILL NYE THE NAZI SPY' DATABASE
 connection_string = 'mongodb+srv://Zec:PP@billnyethenazispy.w5zka2a.mongodb.net/?retryWrites=true&w=majority'
@@ -128,12 +130,28 @@ ggplot(data = userCommentCountsSubset) +
   ggtitle("Box Plot showing Number of Comments Per User (Outliers Removed)") + 
   coord_flip()
 
+#ARRANGE COMMENTS BY DATE
+dateOrganisedComments = arrange(comments, date)
+
+#ADD COLUMN FOR CUMULATIVE COMMENTS WHEN COMMENT WAS CREATED
+dateOrganisedComments = rowid_to_column(dateOrganisedComments, "Count")
+
+#GREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
+ggplot(data = dateOrganisedComments, aes(x = date, y = Count)) +
+  geom_point() + 
+  geom_smooth(colour = "#ff0000") +
+#  scale_x_datetime(date_format("%Y-%m-%d %H:%M:%S")) + 
+  xlab("Year") + 
+  ylab("Cumulative Number of Comments") +
+  ggtitle("Cumulative Comments")
+
 
 #CLEANUP VARIABLES
 rm(userComments)
 rm(userCommentCounts)
 rm(userCommentCountsSubset)
 rm(normal_data)
+rm(dateOrganisedComments)
 
 
 
