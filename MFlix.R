@@ -43,6 +43,8 @@ rm(connection_string)
 
 
 
+#COMMENTS
+
 #GROUP THE COMMENTS BY THE USER'S EMAIL
 userComments = group_by(comments, email)
 
@@ -136,7 +138,7 @@ rm(normal_data)
 
 
 
-#Theatre Maps
+#THEATRES
 
 #OBTAIN MAP INFO 
 Map = map_data("world")
@@ -171,7 +173,9 @@ rm(theatreLocations)
 
 
 
-# Movie Rating
+#MOVIES
+
+#RATING
 
 #REMOVE INVALID ENTRIES (BASED ON RATING)
 # NOT RATED
@@ -231,7 +235,7 @@ rm(TVRatings)
 
 
 
-# Movie Language
+#LANGUAGE
 
 #SELECT RELEVANT DATA COLUMNS
 movieLanguages = select(movies, languages)
@@ -284,7 +288,7 @@ rm(movieLanguages)
 
 
 
-# Movie Type
+#TYPE
 
 #SELECT RELEVANT DATA
 movieType = select(movies, type, year)
@@ -321,7 +325,7 @@ rm(movieType)
 
 
 
-# Movie Genre
+#GENRE
 
 #COLLECT THE RELEVANT DATA
 movieGenres = select(movies, genres)
