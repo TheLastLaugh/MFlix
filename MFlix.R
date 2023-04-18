@@ -134,24 +134,59 @@ ggplot(data = userCommentCountsSubset) +
 dateOrganisedComments = arrange(comments, date)
 
 #ADD COLUMN FOR CUMULATIVE COMMENTS WHEN COMMENT WAS CREATED
-dateOrganisedComments = rowid_to_column(dateOrganisedComments, "Count")
+dateOrganisedComments = rowid_to_column(dateOrganisedComments, "count")
 
-#GREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
-ggplot(data = dateOrganisedComments, aes(x = date, y = Count)) +
+#CREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
+ggplot(data = dateOrganisedComments, aes(x = date, y = count)) +
   geom_point() + 
-  geom_smooth(colour = "#ff0000") +
-#  scale_x_datetime(date_format("%Y-%m-%d %H:%M:%S")) + 
+  geom_line(colour = "#ff0000") +
   xlab("Year") + 
   ylab("Cumulative Number of Comments") +
   ggtitle("Cumulative Comments")
+
+
+
+#SET DATA TYPE AS COMMENTS
+dateOrganisedComments = mutate(dateOrganisedComments, type = "Comment")
+
+#SELECT ONLY RELEVANT DATA
+dateOrganisedComments = select(dateOrganisedComments, date, count, type)
+
+
+#REMOVE INVALID MOVIES WITH NO RELEASE DATE
+movieTemp = subset(movieTemp, !(date %in% NA))
+
+#ORDER MOVIES BASED ON RELEASE DATE
+movieTemp = arrange(movies, released)
+
+#ADD COLUMN FOR CUMULATIVE NUMBER OF MOVIES WHEN MOVIE WAS RELEASED
+movieTemp = rowid_to_column(movieTemp, "count")
+
+#SET TYPE TO MOVIE, AND SET DATE COLUMN TO THE RELEASE DATE
+movieTemp = mutate(movieTemp, type = "Movie", date = released)
+
+#SELECT ONLY RELEVANT DATA
+movieTemp = select(movieTemp, date, count, type)
+
+#CONNECT DATA FRAME FOR MOVIES AND COMMENTS TOGETHER
+moviesCommentsCumulative = rbind(dateOrganisedComments, movieTemp)
+
+#CREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
+ggplot(data = moviesCommentsCumulative, aes(x = date, y = count, group = type, colour = type)) +
+  geom_point() + 
+  geom_line() +
+  xlab("Year") + 
+  ylab("Cumulative Count") +
+  ggtitle("Cumulative Movies vs Comments")
 
 
 #CLEANUP VARIABLES
 rm(userComments)
 rm(userCommentCounts)
 rm(userCommentCountsSubset)
-rm(normal_data)
 rm(dateOrganisedComments)
+rm(movieTemp)
+rm(moviesCommentsCumulative)
 
 
 
@@ -328,7 +363,7 @@ movieType = arrange(movieType, year)
 #CREATE A COUNT BASED ON THE TYPE OF MOVIE - MORE EFFICIENT THAN THE CODE ABOVE
 movieType = mutate(movieType, count = rowid(type))
 
-#GREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
+#CREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
 ggplot(data = movieType, aes(x = as.numeric(year), y = count, group = type, colour = type)) +
   geom_point() + 
   geom_smooth() +
