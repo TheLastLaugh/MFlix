@@ -137,10 +137,6 @@ dateOrganisedComments = mutate(dateOrganisedComments, type = "Comment")
 #SELECT ONLY RELEVANT DATA
 dateOrganisedComments = select(dateOrganisedComments, date, count, type)
 
-
-#REMOVE INVALID MOVIES WITH NO RELEASE DATE
-movieTemp = subset(movieTemp, !(date %in% NA))
-
 #ORDER MOVIES BASED ON RELEASE DATE
 movieTemp = arrange(movies, released)
 
