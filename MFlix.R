@@ -1,4 +1,6 @@
+#------------------------------------------------------------------
 #(1) DATA GATHERING, AND BASIC SANITISATION AND TIDYING
+#------------------------------------------------------------------
 
 #INSTALL REQUIRED LIBRARIES
 #install.packages("mongolite")
@@ -20,12 +22,6 @@ db_sessions_collection = mongo(collection="sessions", db="sample_mflix", url=con
 db_theatres_collection = mongo(collection="theaters", db="sample_mflix", url=connection_string)
 db_users_collection = mongo(collection="users", db="sample_mflix", url=connection_string)
 
-
-#===============================================================================
-#SHOULD THE BELOW CODE BE PUT INTO SECTION 2?
-#SHOULD WE EVER PULL THE SESSIONS DATA? IT HAS NOTHING - JUST IGNORE?
-#===============================================================================
-
 #CONVERT ALL OF THE DATA (PULLED FROM MONGO) INTO DATAFRAMES FOR USE
 comments = as.data.frame(db_comments_collection$find())
 movies = as.data.frame(db_movies_collection$find())
@@ -44,19 +40,25 @@ rm(db_sessions_collection)
 rm(db_theatres_collection)
 rm(db_users_collection)
 
-
-#===============================================================================
-#We can probably remove the sessions data completely. there is only one row... kinda useless.
-#Maybe don't even need to import in the first place
-#===============================================================================
+#REMOVE SESSIONS DATAFRAME (IRRELEVANT)
 rm(sessions)
 
-
+#------------------------------------------------------------------
 #(2) DATA TRANSFORMATION
+#------------------------------------------------------------------
 
 #THE TRANSFORMATIONS FROM PART 3 SHOULD BE MOVED HERE. - EG SUBSET CREATIONS, DATA CLEAN UP, ETC.
 #THIS SHOULD BE SORTED SO IT CAN BE SEEN WHAT SECTION IT IS FOR - EG GRAPH 1.
 
+#REMOVE BAD ENTRIES THAT HAVE YEAR ERRORS (e.g: 2014è, 2006è2007)
+movies = movies[!grepl('è', movies$year),]
+
+#DATAFRAME OF NUMBER OF MOVIES GROUPED BY YEAR
+movieCount = movies %>% group_by(year) %>% count
+
+#VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
+ggplot(data = movieCount) +
+  geom_point(mapping= aes(x = year, y = n))
 
 
 
@@ -271,7 +273,7 @@ ggplot() +
 #length(db_movies_collection$distinct("year")) is the same as:
 n_distinct(movies$year)
 
-movies %>% group_by(year) %>% count
+
 #potentially compare ratings by year? (like as years go on, how does the percentage of each type of rating change)
 #IF THIS IS DONE, PUT IT NEAR THE OTHER 'RATING' DATA / GRAPHS
 
