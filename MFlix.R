@@ -48,15 +48,12 @@ rm(connection_string)
 #COMMENTS
 
 #GROUP THE COMMENTS BY THE USER'S EMAIL
-userComments = group_by(comments, email)
+userCommentCounts = group_by(comments, email)
 
 
 #COUNT THE NUMBER OF COMMENTS PER USER - GROUP_BY IS REQUIRED TO ACHIEVE THIS
-userCommentCounts = count(userComments)$n
+userCommentCounts = data.frame(count = count(userCommentCounts)$n)
 
-
-#CONVERT THE DATA TO A DATARAME TO BE GRAPHED
-userCommentCounts = data.frame(count = userCommentCounts)
 
 #USING HISTOGRAMS AUTOMATICALLY SEPARATED THE DATA INTO BINS
 #THIS MAKES THE MANUAL METHOD OF PUTTING DATA INTO BINS UNNECESSARY
@@ -119,32 +116,20 @@ ggplot(data = userCommentCounts) +
   geom_boxplot(mapping = aes(x = count), fill = "#FF0000", colour = "#000000") +
   xlab("Count") +
   ylab("Number of Comments Per User") +
-  ggtitle("Box Plot showing Number of Comments Per User") + 
-  coord_flip()
+  ggtitle("Box Plot showing Number of Comments Per User")
 
 #BOX PLOT OF THE SUBSET OF THE DATA
 ggplot(data = userCommentCountsSubset) +
   geom_boxplot(mapping = aes(x = count), fill = "#FF0000", colour = "#000000") +
   xlab("Count") +
   ylab("Number of Comments Per User") +
-  ggtitle("Box Plot showing Number of Comments Per User (Outliers Removed)") + 
-  coord_flip()
+  ggtitle("Box Plot showing Number of Comments Per User (Outliers Removed)")
 
 #ARRANGE COMMENTS BY DATE
 dateOrganisedComments = arrange(comments, date)
 
 #ADD COLUMN FOR CUMULATIVE COMMENTS WHEN COMMENT WAS CREATED
 dateOrganisedComments = rowid_to_column(dateOrganisedComments, "count")
-
-#CREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
-ggplot(data = dateOrganisedComments, aes(x = date, y = count)) +
-  geom_point() + 
-  geom_line(colour = "#ff0000") +
-  xlab("Year") + 
-  ylab("Cumulative Number of Comments") +
-  ggtitle("Cumulative Comments")
-
-
 
 #SET DATA TYPE AS COMMENTS
 dateOrganisedComments = mutate(dateOrganisedComments, type = "Comment")
@@ -181,7 +166,6 @@ ggplot(data = moviesCommentsCumulative, aes(x = date, y = count, group = type, c
 
 
 #CLEANUP VARIABLES
-rm(userComments)
 rm(userCommentCounts)
 rm(userCommentCountsSubset)
 rm(dateOrganisedComments)
@@ -363,7 +347,7 @@ movieType = arrange(movieType, year)
 #CREATE A COUNT BASED ON THE TYPE OF MOVIE - MORE EFFICIENT THAN THE CODE ABOVE
 movieType = mutate(movieType, count = rowid(type))
 
-#CREATE A DOT PLOT, AND SMOOTH LINE SHOWING THIS
+#CREATE A DOTPLOT, AND SMOOTH LINE SHOWING THIS
 ggplot(data = movieType, aes(x = as.numeric(year), y = count, group = type, colour = type)) +
   geom_point() + 
   geom_smooth() +
@@ -419,6 +403,24 @@ rm(movieGenres)
 #CODE TO THIS POINT IS WRITTEN BY ZEC
 #===============================================================================
 
+#CODE WRITTEN BY DARCY
+
+#DATAFRAME OF NUMBER OF MOVIES GROUPED BY YEAR
+movieCount = movies %>% group_by(year) %>% count
+
+#VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
+ggplot(data = movieCount) +
+  geom_point(mapping= aes(x = year, y = n))
+
+#DATAFRAME OF NUMBER OF MOVIES GROUPED BY YEAR
+movieCount = movies %>% group_by(year) %>% count
+
+#VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
+ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
+  geom_point() +
+  xlab("Year") +
+  ylab("Movies Released That Year") +
+  scale_x_continuous(breaks=seq(1890,2020,5),limits = c(1890,2016))
 
 
 
