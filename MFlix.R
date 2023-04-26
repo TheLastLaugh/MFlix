@@ -415,9 +415,9 @@ movieCount = movies %>% group_by(year) %>% count
 ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
   geom_point() +
   xlab("Year") +
-  ylab("Movies Released That Year") +
-  scale_x_continuous(breaks=seq(1890,2020,5),limits = c(1890,2016))
+  ylab("Movies Released That Year")
 
+rm(movieCount)
 
 
 
