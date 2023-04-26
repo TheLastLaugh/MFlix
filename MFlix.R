@@ -416,7 +416,8 @@ ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
   geom_point() +
   xlab("Year") +
   ylab("Movies Released That Year") +
-  scale_x_continuous(breaks=seq(1890,2020,5),limits = c(1890,2016))
+  geom_line() +
+  geom_smooth()
 
 
 
@@ -426,7 +427,6 @@ ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
 #===============================================================================
 # movies ratings / movies where the rating matches or something
 # passwords - compare to a hash file (eg: rockyou.txt), and view security perhaps?
-# line graph of total comments over time
 
 
 # Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
