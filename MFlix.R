@@ -435,38 +435,27 @@ movieCountries = select(movies,countries)
 movieCountries = data.frame(countries = unlist(movieCountries$countries))
 movieCountries = movieCountries %>% group_by(countries) %>% count
 movieCountries = group_by(movieCountries, countries)
-movieCountries
+movieCountries = arrange(movieCountries,n)
+sum = 0
+max = nrow(movieCountries) - 9;
+for (x in 1:max){
+  sum = sum + movieCountries$n[x]
+}
+movieCountries = arrange(movieCountries,-n)
+movieCountries = head(movieCountries,9)
+movieCountries[nrow(movieCountries) + 1,] <- list('Other',sum)
+
+
+ggplot(data=head(movieCountries,10),aes(x="", y=n, fill = countries)) +
+  geom_col(color = "white") +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = paste0(n)),)
+
 
 #not sure if these are as good
-#===============================================================================
-# movies ratings / movies where the rating matches or something
-# passwords - compare to a hash file (eg: rockyou.txt), and view security perhaps?
-
-
 # Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
-# comment date? (compare to movie release too ?)
 
-# Movie country
-
-#number of distinct years that movies (within this database) have been released in.
-#length(db_movies_collection$distinct("year")) is the same as:'
-
-
-#n_distinct(movies$year)
-
-#print(movies %>% group_by(year) %>% count, n = 133)
-
-#movies = subset(movies, )
-
-
-#potentially compare ratings by year? (like as years go on, how does the percentage of each type of rating change)
-#IF THIS IS DONE, PUT IT NEAR THE OTHER 'RATING' DATA / GRAPHS
-
-
-
-
-
-
+#===============================================================================
 #(4) DATA MODELLING 
 #===============================================================================
 
