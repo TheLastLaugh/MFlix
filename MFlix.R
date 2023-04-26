@@ -401,6 +401,9 @@ rm(movieGenres)
 
 #CODE WRITTEN BY DARCY
 
+################################################################################
+#Number Of Movies Released For Each Year
+################################################################################
 #DATAFRAME OF NUMBER OF MOVIES GROUPED BY YEAR
 movieCount = movies %>% group_by(year) %>% count
 
@@ -419,9 +422,20 @@ ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
   geom_line() +
   geom_smooth()
 
+#DROPPING VARS
+rm(movieCount)
+################################################################################
 
+################################################################################
+#Number Of Movies Released For Each Country
+################################################################################
 
-
+#Unlisting the countries column
+movieCountries = select(movies,countries)
+movieCountries = data.frame(countries = unlist(movieCountries$countries))
+movieCountries = movieCountries %>% group_by(countries) %>% count
+movieCountries = group_by(movieCountries, countries)
+movieCountries
 
 #not sure if these are as good
 #===============================================================================
