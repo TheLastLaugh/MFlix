@@ -435,6 +435,8 @@ movieCountries = select(movies,countries)
 movieCountries = data.frame(countries = unlist(movieCountries$countries))
 movieCountries = movieCountries %>% group_by(countries) %>% count
 movieCountries = group_by(movieCountries, countries)
+
+#Creating the "Other" Entry, combining every entry besides the first 10
 movieCountries = arrange(movieCountries,n)
 sum = 0
 max = nrow(movieCountries) - 9;
@@ -444,12 +446,25 @@ for (x in 1:max){
 movieCountries = arrange(movieCountries,-n)
 movieCountries = head(movieCountries,9)
 movieCountries[nrow(movieCountries) + 1,] <- list('Other',sum)
+movieCountries = movieCountries %>% 
+  summarise(n = sum(n)) %>%
+  mutate(percentage = n/sum(n)*100)
+  
 
-
-ggplot(data=head(movieCountries,10),aes(x="", y=n, fill = countries)) +
-  geom_col(color = "white") +
+#Plotting Pie Chart
+ggplot(data=head(movieCountries,10),aes(x="", y=percentage, fill = countries)) +
+  geom_col(color = "black", linewidth = 1) +
   coord_polar(theta = "y") +
-  geom_text(aes(label = paste0(n)),)
+  geom_text(aes(label = paste0((round(percentage*10))/10,'%'), x = 1.65), 
+            position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, 
+       title = "Movies By Country") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "black"))
 
 
 #not sure if these are as good
