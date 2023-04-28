@@ -466,6 +466,10 @@ ggplot(data=head(movieCountries,10),aes(x="", y=percentage, fill = countries)) +
         axis.ticks = element_blank(),
         plot.title = element_text(hjust = 0.5, color = "black"))
 
+rm(movieCountries)
+rm(max)
+rm(sum)
+rm(x)
 
 #not sure if these are as good
 # Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
