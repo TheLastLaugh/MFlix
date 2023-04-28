@@ -361,23 +361,23 @@ rm(movieType)
 #GENRE
 
 #COLLECT THE RELEVANT DATA
-movieGenres = select(movies, genres)
+movieGenres = select(movies, released, genres)
 
-#ENTRIES WITH MORE THAN ONE GENRE (CONTAINED WITHIN A LIST) ARE REMOVED FROM THE CONTAINED LIST(S), AND ALL GENRES ARE PUT INTO SEPARATE ENTREIS
-movieGenres = data.frame(genres = unlist(movieGenres$genres))
+#ENTRIES WITH MORE THAN ONE GENRE (CONTAINED WITHIN A LIST) ARE REMOVED FROM THE CONTAINED LIST(S), AND ALL GENRES ARE PUT INTO SEPARATE ENTRIES (EACH HAS A DATE ASSOCIATED)
+movieGenres = unnest(movieGenres, genres)
 
 #GROUP MOVIES BASED ON GENRE
 movieGenres = group_by(movieGenres, genres)
 
 #CREATE A DATAFRAME CONTAINING THE GENRES AND COUNT OF OCCURENCES WITHIN MOVIES
-movieGenres = data.frame(genres = summarise(movieGenres),
+movieGenreSummary = data.frame(genres = summarise(movieGenres),
                          count = count(movieGenres)$n)
 
 #ARRANGE MOVIES IN DESCENDING ORDER
-movieGenres = arrange(movieGenres, -count)
+movieGenreSummary = arrange(movieGenreSummary, -count)
 
 #BAR GRAPH OF DATA
-ggplot(data = movieGenres) +
+ggplot(data = movieGenreSummary) +
   geom_bar(stat = 'identity', mapping = aes(x = genres, y = count), fill = "#FF0000", colour = "#000000") + 
   xlab("Genres") + 
   ylab("Count") + 
@@ -385,19 +385,45 @@ ggplot(data = movieGenres) +
   ggtitle("Genre Occurence Count")
 
 #BAR GRAPH OF TOP 5 GENRES
-ggplot(data = head(movieGenres, 5)) +
+ggplot(data = head(movieGenreSummary, 5)) +
   geom_bar(stat = 'identity', mapping = aes(x = genres, y = count), fill = "#FF0000", colour = "#000000") + 
   xlab("Genres") + 
   ylab("Count") + 
   ggtitle("Genre Occurence Count (Top 5 Genres)")
 
 
+#COLLECT TOP 5 GENRES (BASED ON OCCURENCES)
+topFiveGenres = select(head(movieGenreSummary, 5), genres)
+
+#CONVERT THESE TO AN ARRAY FOR USE
+topFiveGenres = as.array(topFiveGenres$genres)
+
+#CREATE A SUBSET OF THE MOVES, ONLY INCLUDING ENTRIES OF THE TOP 5 GENRES
+movieGenres = subset(movieGenres, genres %in% topFiveGenres)
+
+#ORDER BASED ON RELEASE
+movieGenres = arrange(movieGenres, released)
+
+#ADD A CUMULATIVE COUNT VARIABLE 
+movieGenres = mutate(movieGenres, count = rowid(genres))
+
+#GRAPH GENRES OVER TIME
+ggplot(data = movieGenres, aes(x = as.numeric(released), y = count, group = genres, colour = genres)) +
+  geom_point() +
+  geom_line() +
+  xlab("Year") +
+  ylab("Number of Movies") +
+  ggtitle("Cumulative Count of Genre Usage (Top 5 Genres)")
+  
 #CLEANUP VARIABLES
 rm(movieGenres)
+rm(movieGenreSummary)
+rm(topFiveGenres)
 
 #===============================================================================
 #CODE TO THIS POINT IS WRITTEN BY ZEC
 #===============================================================================
+
 
 #CODE WRITTEN BY DARCY
 
