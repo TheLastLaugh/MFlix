@@ -324,7 +324,7 @@ rm(movieLanguages)
 #TYPE
 
 #SELECT RELEVANT DATA
-movieType = select(movies, type, year)
+movieType = select(movies, type, released)
 
 #GROUP THE DATA BASED ON THE MOVIE TYPE
 movieType = group_by(movieType, type)
@@ -338,16 +338,16 @@ ggplot(data = movieType) +
 
 
 #ARRANGE DATA IN ASCENDING YEAR
-movieType = arrange(movieType, year)
+movieType = arrange(movieType, released)
 
 #CREATE A COUNT BASED ON THE TYPE OF MOVIE - MORE EFFICIENT THAN THE CODE ABOVE
 movieType = mutate(movieType, count = rowid(type))
 
 #CREATE A DOTPLOT, AND SMOOTH LINE SHOWING THIS
-ggplot(data = movieType, aes(x = as.numeric(year), y = count, group = type, colour = type)) +
+ggplot(data = movieType, aes(x = released, y = count, group = type, colour = type)) +
   geom_point() + 
-  geom_smooth() +
-  scale_x_continuous(name = "Year", limits = NULL, n.breaks = 10) + 
+  geom_line() +
+  xlab("Year") +
   ylab("Cumulative Number of Movies") +
   ggtitle("Cumulative Movies Grouped by 'type'")
 
@@ -408,7 +408,7 @@ movieGenres = arrange(movieGenres, released)
 movieGenres = mutate(movieGenres, count = rowid(genres))
 
 #GRAPH GENRES OVER TIME
-ggplot(data = movieGenres, aes(x = as.numeric(released), y = count, group = genres, colour = genres)) +
+ggplot(data = movieGenres, aes(x = released, y = count, group = genres, colour = genres)) +
   geom_point() +
   geom_line() +
   xlab("Year") +
