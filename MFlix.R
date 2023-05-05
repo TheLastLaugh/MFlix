@@ -1,3 +1,4 @@
+#===============================================================================
 #(1) DATA GATHERING, AND BASIC SANITISATION AND TIDYING
 
 #INSTALL REQUIRED LIBRARIES
@@ -6,6 +7,7 @@
 #install.packages("dplyr")
 #install.packages("scales")
 #install.packages("data.table")
+#install.packages("maps")
 
 #CALL REQUIRED LIBRARIES
 library(mongolite)
@@ -13,6 +15,7 @@ library(tidyverse)
 library(dplyr)
 library(data.table)
 library(scales)
+library(maps)
 
 #DEFINE (ZEC'S) CONNECTION TO THE 'BILL NYE THE NAZI SPY' DATABASE
 connection_string = 'mongodb+srv://Zec:PP@billnyethenazispy.w5zka2a.mongodb.net/?retryWrites=true&w=majority'
@@ -44,7 +47,7 @@ rm(connection_string)
 
 
 
-
+#===============================================================================
 #COMMENTS
 
 #GROUP THE COMMENTS BY THE USER'S EMAIL
@@ -92,6 +95,7 @@ ggplot(data = userCommentCountsSubset, aes(x = count)) +
   xlab("Comments Created per User") +
   ylab("Count of Users") +
   ggtitle("Number of User Comments within Specified Ranges (Outliers Removed)")
+
 
 
 #10 BIN HISTOGRAM OF THE SUBSET OF DATA
@@ -170,7 +174,7 @@ rm(moviesCommentsCumulative)
 
 
 
-
+#===============================================================================
 #THEATRES
 
 #OBTAIN MAP INFO 
@@ -205,10 +209,10 @@ rm(theatreLocations)
 
 
 
-
+#===============================================================================
 #MOVIES
-
-#RATING
+################################################################################
+#RATINGS
 
 #REMOVE INVALID ENTRIES (BASED ON RATING)
 # NOT RATED
@@ -267,7 +271,7 @@ rm(TVRatings)
 
 
 
-
+################################################################################
 #LANGUAGE
 
 #SELECT RELEVANT DATA COLUMNS
@@ -318,9 +322,7 @@ ggplot(data = head(movieLanguages, 5)) +
 #CLEANUP VARIABLES
 rm(movieLanguages)
 
-
-
-
+################################################################################
 #TYPE
 
 #SELECT RELEVANT DATA
@@ -357,7 +359,7 @@ rm(movieType)
 
 
 
-
+################################################################################
 #GENRE
 
 #COLLECT THE RELEVANT DATA
@@ -420,16 +422,9 @@ rm(movieGenres)
 rm(movieGenreSummary)
 rm(topFiveGenres)
 
-#===============================================================================
-#CODE TO THIS POINT IS WRITTEN BY ZEC
-#===============================================================================
-
-
-#CODE WRITTEN BY DARCY
-
 ################################################################################
 #Number Of Movies Released For Each Year
-################################################################################
+
 #DATAFRAME OF NUMBER OF MOVIES GROUPED BY YEAR
 movieCount = movies %>% group_by(year) %>% count
 
@@ -450,11 +445,9 @@ ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
 
 #DROPPING VARS
 rm(movieCount)
-################################################################################
 
 ################################################################################
 #Number Of Movies Released For Each Country
-################################################################################
 
 #Unlisting the countries column
 movieCountries = select(movies,countries)
@@ -472,6 +465,8 @@ for (x in 1:max){
 movieCountries = arrange(movieCountries,-n)
 movieCountries = head(movieCountries,9)
 movieCountries[nrow(movieCountries) + 1,] <- list('Other',sum)
+
+#Calculating Percentages For Each Country
 movieCountries = movieCountries %>% 
   summarise(n = sum(n)) %>%
   mutate(percentage = n/sum(n)*100)
@@ -497,14 +492,4 @@ rm(max)
 rm(sum)
 rm(x)
 
-#not sure if these are as good
-# Movie writers / language / poster / tomatos info (dvd date / length, rating / meter, dot plot of rating vs no. of reviews)
-
-#===============================================================================
-#(4) DATA MODELLING 
-#===============================================================================
-
-
-
-#===============================================================================
-
+#EOF
