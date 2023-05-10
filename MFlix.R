@@ -8,6 +8,7 @@
 #install.packages("scales")
 #install.packages("data.table")
 #install.packages("maps")
+install.packages("modelr")
 
 #CALL REQUIRED LIBRARIES
 library(mongolite)
@@ -16,6 +17,8 @@ library(dplyr)
 library(data.table)
 library(scales)
 library(maps)
+library(modelr)
+options(na.action = na.warn)
 
 #DEFINE (ZEC'S) CONNECTION TO THE 'BILL NYE THE NAZI SPY' DATABASE
 connection_string = 'mongodb+srv://Zec:PP@billnyethenazispy.w5zka2a.mongodb.net/?retryWrites=true&w=majority'
@@ -275,13 +278,13 @@ rm(TVRatings)
 #LANGUAGE
 
 #SELECT RELEVANT DATA COLUMNS
-movieLanguages = select(movies, languages)
+movieLanguages = select(movies, languages)#
 
 #REMOVE NULL ENTRIES
 movieLanguages = subset(movieLanguages, !(languages %in% "NULL"))
 
 #ENTRIES WITH MORE THAN ONE LANGUAGE (CONTAINED WITHIN A LIST) ARE REMOVED FROM THE CONTAINED LIST(S), AND ALL LANGUAGES ARE PUT INTO SEPARATE ENTREIS
-movieLanguages = data.frame(languages = unlist(movieLanguages$languages))
+movieLanguages = data.frame(languages = unlist(movieLanguages$languages)) #
 
 #GROUP MOVIES BASED ON LANGUAGE
 movieLanguages = group_by(movieLanguages, languages)
@@ -439,9 +442,7 @@ movieCount = movies %>% group_by(year) %>% count
 ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
   geom_point() +
   xlab("Year") +
-  ylab("Movies Released That Year") +
-  geom_line() +
-  geom_smooth()
+  ylab("Movies Released That Year")
 
 #DROPPING VARS
 rm(movieCount)
