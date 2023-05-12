@@ -433,19 +433,51 @@ movieCount = movies %>% group_by(year) %>% count
 
 #VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
 ggplot(data = movieCount) +
-  geom_point(mapping= aes(x = year, y = n))
+  geom_point(mapping= aes(x = year, y = n))+
+  xlab("Year")+
+  ylab("Movies Released That Year") +
+  ggtitle("Movies Released Per Year")
 
-#DATAFRAME OF NUMBER OF MOVIES GROUPED BY YEAR
-movieCount = movies %>% group_by(year) %>% count
+movieCount$year = as.numeric(movieCount$year)
+movieCount =na.omit(movieCount)
 
 #VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
-ggplot(data = movieCount, aes(x = as.numeric(year), y = n)) +
+ggplot(data = movieCount, aes(x = year, y = n)) +
   geom_point() +
+  geom_line() +
+  xlab("Year") +
+  ylab("Movies Released That Year") +
+  ggtitle("Movies Released Per Year")
+
+#MODELLING OF MOVIECOUNT
+model1 <- function(a, data) {
+  a[1] + data$x * a[2]
+}
+sim1_dist <- function(a1, a2) {
+  measure_distance(c(a1, a2), sim1)
+}
+measure_distance <- function(mod, data) {
+  diff <- data$y - model1(mod, data)
+  sqrt(mean(diff ^ 2))
+}
+names(movieCount)[1] = "x"
+names(movieCount)[2] = "y"
+
+best <- optim(c(0, 0), measure_distance, data = movieCount)
+best$par
+
+ggplot(data = movieCount, aes(x , y)) +
+  geom_point() +
+  geom_abline(intercept = best$par[1], slope = best$par[2]) +
   xlab("Year") +
   ylab("Movies Released That Year")
 
 #DROPPING VARS
 rm(movieCount)
+rm(best)
+rm(measure_distance)
+rm(model1)
+rm(sim1_dist)
 
 ################################################################################
 #Number Of Movies Released For Each Country
@@ -487,10 +519,7 @@ ggplot(data=head(movieCountries,10),aes(x="", y=percentage, fill = countries)) +
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         plot.title = element_text(hjust = 0.5, color = "black"))
-
-rm(movieCountries)
-rm(max)
-rm(sum)
-rm(x)
+#DROPPING VARS
+rm(movieCountries,max,sum,x)
 
 #EOF
