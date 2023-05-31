@@ -8,7 +8,7 @@
 #install.packages("scales")
 #install.packages("data.table")
 #install.packages("maps")
-install.packages("modelr")
+#install.packages("modelr")
 
 #CALL REQUIRED LIBRARIES
 library(mongolite)
@@ -429,55 +429,67 @@ rm(topFiveGenres)
 #Number Of Movies Released For Each Year
 
 #DATAFRAME OF NUMBER OF MOVIES GROUPED BY YEAR
-movieCount = movies %>% group_by(year) %>% count
+#REMOVING YEARS 2015,2016 AND ANYTHING BEFORE 1910
+
+movieCount <- movies %>% 
+  group_by(year) %>% 
+  count %>%
+  subset(year > 1910)
 
 #VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
-ggplot(data = movieCount) +
-  geom_point(mapping= aes(x = year, y = n))+
+ggplot(data = movieCount, aes(x = year, y = n)) +
+  geom_point()+
   xlab("Year")+
   ylab("Movies Released That Year") +
   ggtitle("Movies Released Per Year")
 
-movieCount$year = as.numeric(movieCount$year)
-movieCount =na.omit(movieCount)
+#CONVERTING YEAR COLUMN TO A NUMERIC FORMAT AND REMOVING NAs
+movieCount <- movieCount %>% 
+  mutate(year = as.numeric(year)) %>%  
+  na.omit(movieCount)
 
-#VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
+#VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME WITH CHANGES IN PLACE
 ggplot(data = movieCount, aes(x = year, y = n)) +
   geom_point() +
-  geom_line() +
   xlab("Year") +
+  scale_x_continuous(n.breaks = 10) +
   ylab("Movies Released That Year") +
   ggtitle("Movies Released Per Year")
 
 #MODELLING OF MOVIECOUNT
-model1 <- function(a, data) {
-  a[1] + data$x * a[2]
-}
-sim1_dist <- function(a1, a2) {
-  measure_distance(c(a1, a2), sim1)
-}
-measure_distance <- function(mod, data) {
-  diff <- data$y - model1(mod, data)
-  sqrt(mean(diff ^ 2))
-}
-names(movieCount)[1] = "x"
-names(movieCount)[2] = "y"
 
-best <- optim(c(0, 0), measure_distance, data = movieCount)
-best$par
+#CONVERTING n TO log(n) FOR A POTENTIAL LINEAR LOOK
+movieCount <- movieCount %>% 
+  mutate(logn = log(n))
 
-ggplot(data = movieCount, aes(x , y)) +
+#PLOT OF LOGARITHMIC GRAPH
+ggplot(data = movieCount, aes(x = year, y = logn)) +
   geom_point() +
-  geom_abline(intercept = best$par[1], slope = best$par[2]) +
   xlab("Year") +
   ylab("Movies Released That Year")
 
-#DROPPING VARS
-rm(movieCount)
-rm(best)
-rm(measure_distance)
-rm(model1)
-rm(sim1_dist)
+#GATHERING DETAILS FOR LINEAR MODEL
+#USE summary(model) FOR DETAILS
+model <- lm(logn~year, data = movieCount)
+modelSummary = summary(model)
+
+
+#CREATING A GRID OF PREDICTIONS USING log(n)
+grid <- movieCount %>% 
+  data_grid(n = seq_range(n, 20)) %>% 
+  mutate(logn = log(n)) %>% 
+  add_predictions(model, "pred")
+
+#PLOT OF MOVIECOUNT WITH MODEL
+ggplot(data = movieCount, aes(x = year, y = logn)) +
+  geom_point() +
+  geom_line(data = grid , aes(x = year, y = pred), colour = "red", linewidth = 1) +
+  scale_x_continuous(n.breaks = 10) +
+  xlab("Year") +
+  ylab("Log of Movies Released That Year")
+
+  #DROPPING VARS
+rm(movieCount,grid,model,modelSummary)
 
 ################################################################################
 #Number Of Movies Released For Each Country
