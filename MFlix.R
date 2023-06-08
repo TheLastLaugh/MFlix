@@ -2,16 +2,17 @@
 #(1) DATA GATHERING, AND BASIC SANITISATION AND TIDYING
 
 #INSTALL REQUIRED LIBRARIES
-#install.packages("mongolite")
-#install.packages("tidyverse")
-#install.packages("dplyr")
-#install.packages("scales")
-#install.packages("data.table")
-#install.packages("maps")
-#install.packages("modelr")
+install.packages("mongolite")
+install.packages("tidyverse")
+install.packages("dplyr")
+install.packages("scales")
+install.packages("data.table")
+install.packages("maps")
+install.packages("modelr")
 install.packages("ggpubr")
 install.packages("Metrics")
 install.packages("factoextra")
+
 #CALL REQUIRED LIBRARIES
 library(mongolite)
 library(tidyverse)
@@ -24,8 +25,6 @@ library(ggpubr)
 library(Metrics)
 library(factoextra)
 options(na.action = na.warn)
-
-colour <- rgb(1,1,1, alpha = 0)
 
 #DEFINE (ZEC'S) CONNECTION TO THE 'BILL NYE THE NAZI SPY' DATABASE
 connection_string = 'mongodb+srv://Zec:PP@billnyethenazispy.w5zka2a.mongodb.net/?retryWrites=true&w=majority'
@@ -66,7 +65,6 @@ userCommentCounts = group_by(comments, email)
 
 #COUNT THE NUMBER OF COMMENTS PER USER - GROUP_BY IS REQUIRED TO ACHIEVE THIS
 userCommentCounts = data.frame(count = count(userCommentCounts)$n)
-
 
 #USING HISTOGRAMS AUTOMATICALLY SEPARATED THE DATA INTO BINS
 #THIS MAKES THE MANUAL METHOD OF PUTTING DATA INTO BINS UNNECESSARY
@@ -210,51 +208,66 @@ ggplot() +
 
 #MODELLING
 
-#REDUCING DATA TO INSIDE USA'S MAINLAND
-theatreLocations <- theatreLocations %>% 
-  subset(X1 > -140) %>% 
-  subset(X2 > 20)
-
-#PERFORMING kMAP CALCULATIONS ON GIVEN THEATRELOCATIONS
-
-
-kMapTheatres <- kmeans(theatreLocations, 50, nstart=50)
-
-#GRABBING THE LONGITUDE AND LATITUDE FROM CENTRES
-kMapVals <- as.data.frame(kMapTheatres[["centers"]])
-
-#DEFINING EACH DATA NODE INTO ONE OF THE 50 CLUSTERS
-theatreLocations <- theatreLocations %>% 
-  mutate(cluster = as.character(kMapTheatres[["cluster"]]))
-
 #LOADING THE CAPITAL CITIES INSIDE THE MAINLAND
 capitals <- us.cities %>% 
   subset(capital == 2) %>% 
   subset(long > -130) %>% 
   subset(lat > 20)
 
+#REDUCING DATA TO INSIDE USA'S MAINLAND
+theatreLocations <- theatreLocations  %>% 
+  mutate(state = theatres$location$address$state) %>% 
+  subset(X1 > -140) %>% 
+  subset(X2 > 20)
+
+ggplot() + 
+  geom_polygon(data = USMap, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
+  borders("state")+
+  coord_quickmap() + 
+  geom_point(theatreLocations, mapping = aes(X1, X2, colour = state))+
+  geom_point(capitals, mapping = aes(long,lat))+
+  theme(legend.position="none") +
+  ggtitle("Theatres Grouped by State (State Capitals Included)")
+
+#PERFORMING KMEANS CALCULATIONS ON GIVEN THEATRELOCATIONS
+
+set.seed(500)
+kMapTheatres <- kmeans(theatreLocations %>% select(1,2), 46, nstart=25)
+
+#GRABBING THE LONGITUDE AND LATITUDE FROM CENTRES
+kMapVals <- as.data.frame(kMapTheatres[["centers"]])
+
+#DEFINING EACH DATA NODE INTO ONE OF THE 50 CLUSTERS
+theatreLocations <- theatreLocations %>% 
+  mutate(cluster = as.character(kMapTheatres[["cluster"]])) %>% 
+  mutate(cluster = factor(cluster))
+
 ggarrange(ggplot() + 
             geom_polygon(data = USMap, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
             borders("state")+
             coord_quickmap() + 
-            geom_point(capitals, mapping = aes(long, lat,), colour = "red"), 
-           # geom_point(kMapVals, mapping = aes(X1, X2), colour = "blue", size = 3),
+            geom_point(theatreLocations, mapping = aes(X1, X2, colour = cluster))+
+            geom_point(kMapVals, mapping = aes(X1, X2), shape = "square")+
+            theme(legend.position="none") +
+            ggtitle("Kmean Centres with Theatres (Grouped By Cluster Groups)"),
           ggplot() + 
             geom_polygon(data = USMap, mapping = aes(long, lat, group = group), fill = "#ffffff", colour = "#000000") + 
             borders("state")+
             coord_quickmap() + 
-            geom_point(theatreLocations, mapping = aes(X1, X2, colour = cluster))+
-            geom_point(kMapVals, mapping = aes(X1, X2), colour = "blue", size = 3)+
-            theme(legend.position="none"),nrow = 2)
+            geom_point(theatreLocations, mapping = aes(X1, X2, colour = state))+
+            geom_point(kMapVals, mapping = aes(X1, X2), shape = "square") +
+            geom_point(capitals, mapping = aes(long, lat), shape = "triangle") +
+            theme(legend.position="none") +
+            ggtitle("Kmean Centres with Theatres (Grouped By State)"),
+          nrow = 2)
+
+
+xtabs(~state+cluster,data = theatreLocations)
 
 fviz_nbclust(theatreLocations[1:2],kmeans,method = "silhouette",k.max = 50)
-?fviz_nbclust
-
 
 #CLEANUP VARIABLES
-rm(Map,USMap,theatreLocations,capitals,kMapTest,kMapVals,tlcluster)
-
-
+rm(Map,USMap,theatreLocations,capitals,kMapTest,kMapVals,tlcluster,kMapTheatres,compare)
 
 #===============================================================================
 #MOVIES
@@ -465,118 +478,9 @@ ggplot(data = movieGenres, aes(x = released, y = count, group = genres, colour =
   ggtitle("Cumulative Count of Genre Usage (Top 5 Genres)")
   
 #CLEANUP VARIABLES
+
 rm(movieGenres)
 rm(movieGenreSummary)
-
-#DATA MODELLING
-
-#megaplot start
-movieGenres <- select(movies, genres, year) %>% 
-  unnest(genres) %>% 
-  arrange(genres, year) %>% 
-  count(genres,year) %>% 
-  subset(genres %in% "Drama") %>% 
-  subset(year >= 1910) %>%
-  subset(year <= 2014) 
-
-dramaPlot <- ggplot(data = movieGenres, aes(x=as.numeric(year), y=n))+ 
-  theme(text = element_text(size = 6))+
-  scale_y_continuous(limits = c(0,700))+
-  xlab("Year") + 
-  ylab("Number of Movies Released") + 
-  geom_point(colour = "red") +
-  ggtitle("Dramas Released per Year")
-
-
-movieGenres <- select(movies, genres, year) %>% 
-  unnest(genres) %>% 
-  arrange(genres, year) %>% 
-  count(genres,year) %>% 
-  subset(genres %in% "Comedy") %>% 
-  subset(year >= 1910) %>%
-  subset(year <= 2014) 
-comedyPlot <- ggplot(data = movieGenres, aes(x=as.numeric(year), y=n))+
-  theme(text = element_text(size = 6))+
-  scale_y_continuous(limits = c(0,700))+
-  xlab("Year") + 
-  ylab("Number of Movies Released") + 
-  geom_point(colour = "orange") +
-  ggtitle("Comedies Released per Year")
-
-
-movieGenres <- select(movies, genres, year) %>% 
-  unnest(genres) %>% 
-  arrange(genres, year) %>% 
-  count(genres,year) %>% 
-  subset(genres %in% "Romance") %>% 
-  subset(year >= 1910) %>%
-  subset(year <= 2014) 
-romancePlot <- ggplot(data = movieGenres, aes(x=as.numeric(year), y=n))+
-  theme(text = element_text(size = 6))+
-  scale_y_continuous(limits = c(0,700))+
-  xlab("Year") + 
-  ylab("Number of Movies Released") + 
-  geom_point(colour = "yellow") +
-  ggtitle("Romance Films Released per Year")
-
-
-movieGenres <- select(movies, genres, year) %>% 
-  unnest(genres) %>% 
-  arrange(genres, year) %>% 
-  count(genres,year) %>% 
-  subset(genres %in% "Crime") %>% 
-  subset(year >= 1910) %>%
-  subset(year <= 2014)
-crimePlot <- ggplot(data = movieGenres, aes(x=as.numeric(year), y=n))+
-  theme(text = element_text(size = 6))+
-  scale_y_continuous(limits = c(0,700))+
-  xlab("Year") + 
-  ylab("Number of Movies Released") + 
-  geom_point(colour = "green") +
-  ggtitle("Crime Films Released per Year")
-
-
-movieGenres <- select(movies, genres, year) %>% 
-  unnest(genres) %>% 
-  arrange(genres, year) %>% 
-  count(genres,year) %>% 
-  subset(genres %in% "Thriller") %>% 
-  subset(year >= 1910) %>%
-  subset(year <= 2014)
-thrillerPlot <- ggplot(data = movieGenres, aes(x=as.numeric(year), y=n))+
-  theme(text = element_text(size = 6))+
-  scale_y_continuous(limits = c(0,700))+
-  xlab("Year") + 
-  ylab("Number of Movies Released") + 
-  geom_point(colour = "blue") +
-  ggtitle("Thrillers Released per Year")
-
-ggarrange(dramaPlot, comedyPlot, romancePlot, crimePlot, thrillerPlot)
-#megaplot end
-
-rm(dramaPlot, comedyPlot, romancePlot, crimePlot, thrillerPlot)
-
-movieGenres <- select(movies, genres, year) %>% 
-  unnest(genres) %>% 
-  arrange(genres, year) %>% 
-  count(genres,year) %>% 
-  subset(genres %in% topFiveGenres) %>% 
-  subset(year >= 1910) %>%
-  subset(year <= 2014) 
-
-ggplot(data = movieGenres, aes(x=as.numeric(year), y=log(n), colour = genres))+
-  xlab("Year") + 
-  ylab("Number of Movies Released") + 
-  geom_point() +
-  ggtitle("Movies Released per Year")
-
-ggplot(data = movieGenres, aes(x=genres, y=log(n), colour = genres))+
-  xlab("Genre") + 
-  ylab("Logarithm of Yearly Movies Released") + 
-  theme(legend.position = "none")+
-  geom_boxplot(size=1.2, outlier.size = 3) +
-  ggtitle("Number of Movies Released per Year VS genre")
-
 rm(topFiveGenres)
 
 
@@ -589,7 +493,8 @@ rm(topFiveGenres)
 movieCount <- movies %>% 
   group_by(year) %>% 
   count %>%
-  subset(year > 1910)
+  subset(year > 1910) %>%
+  subset(year < 2015)
 
 #VISUAL REPRESENTATION OF MOVIECOUNT DATAFRAME
 ggplot(data = movieCount, aes(x = year, y = n)) +
@@ -621,7 +526,11 @@ movieCount <- movieCount %>%
 ggplot(data = movieCount, aes(x = year, y = logn)) +
   geom_point() +
   xlab("Year") +
-  ylab("Movies Released That Year")
+  ylab("Log(Movies Released That Year)") +
+  ggtitle("Logarithm of Movies Released per Year")
+
+#TESTING FOR CORRELATION COEFFICIENT
+coefficient <- cor.test(movieCount$year,movieCount$logn)
 
 #GATHERING DETAILS FOR LINEAR MODEL
 #USE summary(model) FOR DETAILS
@@ -637,16 +546,27 @@ grid <- movieCount %>%
 
 rmse(grid$logn, grid$pred)
 
-#PLOT OF MOVIECOUNT WITH MODEL
+#PLOT OF log(MOVIECOUNT) WITH MODEL
 ggplot(data = movieCount, aes(x = year, y = logn)) +
   geom_point() +
   geom_line(data = grid , aes(x = year, y = pred), colour = "red", linewidth = 1) +
   scale_x_continuous(n.breaks = 10) +
   xlab("Year") +
-  ylab("Log of Movies Released That Year")
+  ylab("Log of Movies Released That Year") +
+  ggtitle("Logarithm of Movies Released per Year (LOBF Attached)")
+
+
+#PLOT OF MOVIECOUNT WITH MODEL (EXPONENTIAL)
+ggplot(data = movieCount, aes(x = year, y = exp(1)^logn)) +
+  geom_point() +
+  geom_line(data = grid , aes(x = year, y = exp(1)^pred), colour = "red", linewidth = 1) +
+  scale_x_continuous(n.breaks = 10) +
+  xlab("Year") +
+  ylab("Movies Released That Year") +
+  ggtitle("Movies Released per Year (LOBF Attached)")
 
 #DROPPING VARS
-rm(movieCount,grid,model,modelSummary)
+rm(movieCount,grid,model,modelSummary,coefficient)
 
 ################################################################################
 #Number Of Movies Released For Each Country
